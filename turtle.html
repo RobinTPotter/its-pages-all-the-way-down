@@ -1,0 +1,85 @@
+<html>
+<body>
+<canvas id="rtp" width="500" height="500"></canvas>
+<script>
+var d = document.getElementById('rtp')
+var ctx = d.getContext('2d')
+
+
+
+x=y=250
+dx=1
+dy=0
+l=6
+s=1
+
+a='frffrffrllrrfffrffrfffffrfflffsi'
+p=a+'r'+a+a+'d'+a
+p=p.split('')
+
+it = 10
+
+function next() {
+ if (it>0) {
+  ctx.beginPath()
+  ctx.moveTo(x,y)
+  if ((it%2)==0) {
+   ctx.strokeStyle='blue'
+  } else {
+   ctx.strokeStyle='black'
+  }
+  for (pp in p) {
+   mv(p[pp])
+  }
+  it--
+ }
+ setTimeout(next, 2000)
+}
+
+
+next()
+
+function mv(d) {
+switch(d) {
+ case 'r':
+  tdy = dx
+  tdx = -dy
+   dx=tdx
+   dy=tdy
+  break;
+ case 'l':
+   tdx = dy
+   tdy = -dx
+    dx=tdx
+    dy=tdy
+  break;
+  case 'f':
+   if (s==1) {
+   cdx=dx
+   cdy=dy
+   } else{
+   cdx=dy
+   cdy=dx
+   }
+   ctx.lineTo(x+l*cdx,y+l*cdy)
+   x=x+l*cdx
+   y=y+l*cdy
+   ctx.stroke()
+   break;
+  case 's':
+   s=-s
+   break;
+   case 'i':
+   l++
+   break;
+   case 'd':
+   l--
+   break;
+}
+
+}
+
+
+</script>
+</body>
+</html>
