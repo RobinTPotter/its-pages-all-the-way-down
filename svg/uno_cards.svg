@@ -102,10 +102,9 @@
                         <g transform="translate(-500 -380)">
                             <g transform="translate(15 15)"><path id="s_value_main_shadow" x="15" y="15" style="dominant-baseline:middle;font-family:impact;font-size:900;fill:#000;stroke:#000;stroke-width:10;letter-spacing:-30" /></g>
                             <path id="s_value_main" x="0" y="0" style="dominant-baseline:middle;font-family:impact;font-size:900;fill:#fff;stroke:#000;stroke-width:10;letter-spacing:-30" />
-                            <g>
+                            <g id="barre" style="visibility:hidden">
                                 <rect x="310" y="780" width="400" height="60" style="fill:#000;stroke:#000;stroke-width:10;"></rect>
-                                <rect x="300" y="770" width="400" height="60" style="fill:#fff;stroke:#000;stroke-width:10;"></rect>
-                            
+                                <rect x="300" y="770" width="400" height="60" style="fill:#fff;stroke:#000;stroke-width:10;"></rect>                            
                             </g>
                         </g>
                     </g>
@@ -114,7 +113,7 @@
         </g>
     </g>
 
-    <g id="main_panel" transform="scale(.77)">
+    <g id="main_panel" transform="scale(1.0)">
         <g id="deck" transform="scale(0.25) translate(100 141)"></g>
     </g>
 
@@ -167,10 +166,15 @@
                 var ids = [ 'value_main_shadow', 'value_main', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8' ]
                 for (var ii=0;ii<ids.length;ii++) {
                     document.getElementById(ids[ii]).textContent = val
+                    
+                    
                     if (val=='?') document.getElementById(ids[ii]).style.fontFamily = 'sans-serif'
                     else document.getElementById(ids[ii]).style.fontFamily = 'impact'
                 }
             }
+            
+            if (val=='6' || val=='9') document.getElementById('barre').style.visibility = 'visible'
+            else document.getElementById('barre').style.visibility = 'hidden'
 
             font = 900
             trns = 'translate(500 720)'
@@ -211,7 +215,7 @@
         deck.setAttribute('transform','scale('+deck_scale+') translate('+deck_offset_x+' '+deck_offset_y+')')
         
         var main_panel = document.getElementById('main_panel')
-        main_panel.setAttribute('transform','scale(.77)')
+        main_panel.setAttribute('transform','scale(.81)')
         
         
         
@@ -294,10 +298,10 @@
                 //for (var nn=0;nn<1;nn++) v.push(String(nn))
                 //v.push('M')
                 //v.push('+2')
-                //v.push('R')
+                v.push('R')
                 //v.push('?')
                 //v.push('+4')
-                v.push('6')
+                v.push('1')
                 v.push('9')
 
         
