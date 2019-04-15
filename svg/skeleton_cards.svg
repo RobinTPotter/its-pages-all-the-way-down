@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 744.0945 1052.3622">
+    <defs>
+        <path id="cross" d="M -20 -20 L 0 0 M 20 -20 L -20 20" style="fill:none;stroke:#000;stroke-width:2"></path>
+    </defs>
+
+
+    <g id="card">
+        <g>
+            <g transform="translate(-20 -20) rotate(0)"><use xlink:href="#cross" x="0" y="0"/></g>
+            <g transform="translate(1020 1430) rotate(180)"><use xlink:href="#cross" x="0" y="0"/></g>
+            <g transform="translate(1020 -20) rotate(90)"><use xlink:href="#cross" x="0" y="0"/></g>
+            <g transform="translate(-20 1430) rotate(270)"><use xlink:href="#cross" x="0" y="0"/></g>
+            
+            <g transform="translate(510 -25) rotate(45)"><use xlink:href="#cross" x="0" y="0"/></g>
+            <g transform="translate(-25 715) rotate(315)"><use xlink:href="#cross" x="0" y="0"/></g>
+            <g transform="translate(1025 715) rotate(135)"><use xlink:href="#cross" x="0" y="0"/></g>
+            <g transform="translate(510 1435) rotate(225)"><use xlink:href="#cross" x="0" y="0"/></g>
+            
+            <g>
+                <rect x="0" y="0" width="1000" height="1410" style="fill:none;stroke:#000;stroke-width:2"></rect>
+            </g>
+        </g>
+    </g>
+
+    <g id="main_panel" transform="scale(1.0)">
+        <g id="deck"></g>
+    </g>
+
+    <script id="main_script" type="text/javascript"><![CDATA[
+
+        ///twitch();
+
+        var pos = 0
+        var spacing_x = 1.15
+        var spacing_y = 1.1
+        var num_cards = 3
+        var cards_per_page = num_cards * num_cards
+        
+        var deck_offset_x = 100
+        var deck_offset_y = 141
+        var deck_scale = 1 / (num_cards+1)
+        
+        var deck = document.getElementById('deck')
+        deck.setAttribute('transform','scale('+deck_scale+') translate('+deck_offset_x+' '+deck_offset_y+')')
+        
+        var main_panel = document.getElementById('main_panel')
+        main_panel.setAttribute('transform','scale(.88)')
+        
+        
+        
+        
+        //main card object (deleted at end of script) 
+
+        //change main card and clone and put in deck group
+        function createcard() {
+            //suit(pattern)
+            //value(val)
+            var card = document.getElementById('card')
+            card.style.visibility = 'visible'
+            var hello = card.cloneNode(true)
+
+            hello.id = (new Date).getTime()
+            hello.setAttribute('transform','translate('+(spacing_x*1000*(pos % num_cards))+' '+(spacing_y*1410*Math.floor(pos/num_cards))+')');
+            console.log(hello)
+            var deck = document.getElementById('deck')
+            deck.appendChild(hello)
+            card.style.visibility = 'hidden'
+            pos++
+        }
+
+        // page number unless comes from parameter
+        page_number=0
+
+        //count of cards printed
+        card_count=0
+
+        //get the page number from parameter
+        if (window.location.search) {
+            re = /\?page=(\d+)/;
+            page_number =Number( window.location.search.match(re)[1] )
+            //alert(page_number)
+        } else {
+            // no page number, run test page        
+            v = []
+            //all numbers and extra each suit
+            for (var nn=0;nn<8;nn++) v.push(String(nn))
+        }
+
+        //print cards only to fill page
+        for (var vv=0;vv<v.length;vv++) {
+            if (card_count>=page_number*cards_per_page && card_count<(page_number+1)*cards_per_page) createcard()
+            card_count++
+        }
+        
+
+        document.getElementsByTagName('svg')[0].removeChild(document.getElementById('card'))
+        console.log(document.getElementsByTagName('svg')[0])
+
+    ]]>
+    </script>
+    <script type="text/javascript">
+    <![CDATA[
+        document.getElementsByTagName('svg')[0].removeChild(document.getElementById('main_script'))
+    ]]>
+    </script>
+    
+    
+</svg>
