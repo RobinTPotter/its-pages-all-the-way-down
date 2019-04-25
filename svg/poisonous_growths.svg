@@ -8,7 +8,7 @@
     </defs>
 
 
-    <g id="card">
+    <g id="card" transform="scale(0.7)">
         <g>
             <g transform="translate(-20 -20) rotate(0)"><use xlink:href="#cross" x="0" y="0"/></g>
             <g transform="translate(1020 1430) rotate(180)"><use xlink:href="#cross" x="0" y="0"/></g>
@@ -25,10 +25,31 @@
                 <rect x="30" y="30" width="940" height="1350" style="fill:none;stroke:#000;stroke-width:5"></rect>
                 <rect x="50" y="50" width="900" height="1310" style="fill:url(#p_squares);stroke:#000;stroke-width:5"></rect>
                 <path id="bollocks" d="" style="fill:none;stroke:#000;stroke-width:12"></path>
-                <text id="prop1" x="80" y="850"  style="font-size:120px;font-style:serif;font-weight:bold;fill:#fff;stroke:#000;stroke-width:8">TEST</text>
-                <text id="prop2" x="80" y="1000" style="font-size:120px;font-style:serif;font-weight:bold;fill:#fff;stroke:#000;stroke-width:8">TEST</text>
-                <text id="prop3" x="80" y="1150" style="font-size:120px;font-style:serif;font-weight:bold;fill:#fff;stroke:#000;stroke-width:8">TEST</text>
-                <text id="prop4" x="80" y="1300" style="font-size:120px;font-style:serif;font-weight:bold;fill:#fff;stroke:#000;stroke-width:8">TEST</text>
+                
+                <text id="prop01" x="80" y="850"  style="font-size:110px;font-style:serif;font-weight:bold;fill:#000;stroke:#000;stroke-width:35">TEST</text>
+                <text id="prop02" x="80" y="1000" style="font-size:110px;font-style:serif;font-weight:bold;fill:#000;stroke:#000;stroke-width:35">TEST</text>
+                <text id="prop03" x="80" y="1150" style="font-size:110px;font-style:serif;font-weight:bold;fill:#000;stroke:#000;stroke-width:35">TEST</text>
+                <text id="prop04" x="80" y="1300" style="font-size:110px;font-style:serif;font-weight:bold;fill:#000;stroke:#000;stroke-width:35">TEST</text>
+                
+                <text id="prop11"   x="80" y="850"  style="font-size:110px;font-style:serif;font-weight:bold;fill:#000;stroke:#fff;stroke-width:15">TEST</text>
+                <text id="prop12"   x="80" y="1000" style="font-size:110px;font-style:serif;font-weight:bold;fill:#000;stroke:#fff;stroke-width:15">TEST</text>
+                <text id="prop13"   x="80" y="1150" style="font-size:110px;font-style:serif;font-weight:bold;fill:#000;stroke:#fff;stroke-width:15">TEST</text>
+                <text id="prop14"   x="80" y="1300" style="font-size:110px;font-style:serif;font-weight:bold;fill:#000;stroke:#fff;stroke-width:15">TEST</text>
+                
+                <text id="prop21" x="80" y="850"  style="font-size:110px;font-style:serif;font-weight:bold;fill:#000;stroke:#000;stroke-width:5">TEST</text>
+                <text id="prop22" x="80" y="1000" style="font-size:110px;font-style:serif;font-weight:bold;fill:#000;stroke:#000;stroke-width:5">TEST</text>
+                <text id="prop23" x="80" y="1150" style="font-size:110px;font-style:serif;font-weight:bold;fill:#000;stroke:#000;stroke-width:5">TEST</text>
+                <text id="prop24" x="80" y="1300" style="font-size:110px;font-style:serif;font-weight:bold;fill:#000;stroke:#000;stroke-width:5">TEST</text>
+                
+                <text id="tprop01" x="550" y="140"  style="font-size:80px;font-style:serif;font-weight:bold;fill:#000;stroke:#000;stroke-width:35">poisonous</text>                
+                <text id="tprop11" x="550" y="140"  style="font-size:80px;font-style:serif;font-weight:bold;fill:#000;stroke:#fff;stroke-width:15">poisonous</text>
+                <text id="tprop21" x="550" y="140"  style="font-size:80px;font-style:serif;font-weight:bold;fill:#000;stroke:#000;stroke-width:5">poisonous</text>
+                                               
+                <text id="tprop01" x="650" y="240"  style="font-size:80px;font-style:serif;font-weight:bold;fill:#000;stroke:#000;stroke-width:35">growths</text>                
+                <text id="tprop11" x="650" y="240"  style="font-size:80px;font-style:serif;font-weight:bold;fill:#000;stroke:#fff;stroke-width:15">growths</text>
+                <text id="tprop21" x="650" y="240"  style="font-size:80px;font-style:serif;font-weight:bold;fill:#000;stroke:#000;stroke-width:5">growths</text>
+
+                
             </g>
         </g>
     </g>
@@ -73,7 +94,7 @@
         }
 
         //change main card and clone and put in deck group
-        function createcard(thing) {
+        function createcard(thing,runDeck) {
 
             var card = document.getElementById('card')
             card.style.visibility = 'visible'
@@ -89,7 +110,7 @@
             
             r =255 * POISON
             g = 255 - 255 * POISON
-            b = 64 * POISON
+            b = 128 * POISON
             col = fullColorHex(r,g,b)
             
             for (var ii=0;ii<BRANCHES;ii++) {
@@ -116,22 +137,40 @@
             document.getElementById('bollocks').setAttribute('d',data)
             document.getElementById('bollocks').setAttribute('style',`stroke:#${col}; fill:none; stroke-width: ${THICK}`)
             
-            document.getElementById('prop1').textContent = `THICK: ${THICK}`
-            document.getElementById('prop2').textContent = `TENDRIL: ${TENDRIL}`
-            document.getElementById('prop3').textContent = `BRANCHES: ${BRANCHES}`
-            document.getElementById('prop4').textContent = `POISON: ${POISON}`
+            for (var i=0;i<3;i++) { 
+                document.getElementById('prop'+i+'1').textContent = `thick: ${THICK}`
+                document.getElementById('prop'+i+'2').textContent = `tendril: ${TENDRIL}`
+                document.getElementById('prop'+i+'3').textContent = `branches: ${BRANCHES}`
+                document.getElementById('prop'+i+'4').textContent = `poison: ${POISON}`
+            }
+               
+            for (var i=1;i<5;i++) { 
+                xx=0//Math.random()*20
+                document.getElementById('prop0'+i).setAttribute('y', 820 + i * 120 + xx)
+                document.getElementById('prop1'+i).setAttribute('y', 820 + i * 120 + xx)
+                document.getElementById('prop2'+i).setAttribute('y', 820 + i * 120 + xx)
+                
+                xx=0//Math.random()*20
+                document.getElementById('prop0'+i).setAttribute('x', 80 + xx)
+                document.getElementById('prop1'+i).setAttribute('x' ,80+ xx)
+                document.getElementById('prop2'+i).setAttribute('x', 80 + xx)
+            }
+            
+            
+            
+            
 
+            if (!runDeck) {
+                //clone main card and add to the "deck"
+                var hello = card.cloneNode(true)
+                hello.id = (new Date).getTime()
+                hello.setAttribute('transform','translate('+(spacing_x*1000*(pos % num_cards))+' '+(spacing_y*1410*Math.floor(pos/num_cards))+')');
 
-            //clone main card and add to the "deck"
-            var hello = card.cloneNode(true)
-            hello.id = (new Date).getTime()
-            hello.setAttribute('transform','translate('+(spacing_x*1000*(pos % num_cards))+' '+(spacing_y*1410*Math.floor(pos/num_cards))+')');
-
-            var deck = document.getElementById('deck')
-            deck.appendChild(hello)
-            card.style.visibility = 'hidden'
-
-            pos++
+                var deck = document.getElementById('deck')
+                deck.appendChild(hello)
+                card.style.visibility = 'hidden'
+                pos++
+            }
         }
 
         // page number unless comes from parameter
@@ -139,31 +178,45 @@
 
         //count of cards printed
         card_count=0
+        
+        //set up default values first 
+        // no page number, run test page
+        v = []
+        //all numbers and extra each suit
+        for (var nn=0;nn<8;nn++) v.push(String(nn))
+
+    var page
 
         //get the page number from parameter
         if (window.location.search) {
             re = /\?page=(\d+)/;
-            page_number =Number( window.location.search.match(re)[1] )
-            //alert(page_number)
-        } else {
-            // no page number, run test page
-            v = []
-            //all numbers and extra each suit
-            for (var nn=0;nn<8;nn++) v.push(String(nn))
+            match = window.location.search.match(re) 
+            if (match) {
+                page_number = Number(match[1])
+            } else {
+                re = /\?page=(\w+)/;
+                page = window.location.search.match(re)[1] 
+            }
         }
         
-        v = []
-        for (var nn=0;nn<60;nn++) v.push(String(nn))
+        if (!page) {
+        
+            v = []
+            for (var nn=0;nn<27;nn++) v.push(String(nn))
 
-        //print cards only to fill page
-        for (var vv=0;vv<v.length;vv++) {
-            if (card_count>=page_number*cards_per_page && card_count<(page_number+1)*cards_per_page) createcard(v[vv])
-            card_count++
+            //print cards only to fill page
+            for (var vv=0;vv<v.length;vv++) {
+                if (card_count>=page_number*cards_per_page && card_count<(page_number+1)*cards_per_page) createcard(v[vv])
+                card_count++
+            }
+
+            document.getElementsByTagName('svg')[0].removeChild(document.getElementById('card'))
+            //console.log(document.getElementsByTagName('svg')[0])
+                
+        } else {
+            createcard(v[vv],1) 
         }
-
-        document.getElementsByTagName('svg')[0].removeChild(document.getElementById('card'))
-        //console.log(document.getElementsByTagName('svg')[0])
-
+        
     ]]>
     </script>
     <script type="text/javascript">
