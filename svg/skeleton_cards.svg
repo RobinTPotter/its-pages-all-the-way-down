@@ -5,17 +5,7 @@
 
 
     <g id="card">
-        <g>
-            <g transform="translate(-20 -20) rotate(0)"><use xlink:href="#cross" x="0" y="0"/></g>
-            <g transform="translate(1020 1430) rotate(180)"><use xlink:href="#cross" x="0" y="0"/></g>
-            <g transform="translate(1020 -20) rotate(90)"><use xlink:href="#cross" x="0" y="0"/></g>
-            <g transform="translate(-20 1430) rotate(270)"><use xlink:href="#cross" x="0" y="0"/></g>
-            
-            <g transform="translate(510 -25) rotate(45)"><use xlink:href="#cross" x="0" y="0"/></g>
-            <g transform="translate(-25 715) rotate(315)"><use xlink:href="#cross" x="0" y="0"/></g>
-            <g transform="translate(1025 715) rotate(135)"><use xlink:href="#cross" x="0" y="0"/></g>
-            <g transform="translate(510 1435) rotate(225)"><use xlink:href="#cross" x="0" y="0"/></g>
-            
+        <g>           
             <g>
                 <rect x="0" y="0" width="1000" height="1410" style="fill:none;stroke:#000;stroke-width:2"></rect>
             </g>
@@ -23,7 +13,13 @@
     </g>
 
     <g id="main_panel" transform="scale(1.0)">
-        <g id="deck"></g>
+        <g id="deck">
+            <line id="line0" x1="0" y1="0" x2="0" y2="0" style="fill:none;stroke:#000;stroke-width:10;stroke-dasharray:1,20" />
+            <line id="line1" x1="0" y1="0" x2="0" y2="0" style="fill:none;stroke:#000;stroke-width:10;stroke-dasharray:1,20" />
+            <line id="line2" x1="0" y1="0" x2="0" y2="0" style="fill:none;stroke:#000;stroke-width:10;stroke-dasharray:1,20" />
+            <line id="line3" x1="0" y1="0" x2="0" y2="0" style="fill:none;stroke:#000;stroke-width:10;stroke-dasharray:1,20" />
+        </g>
+        
     </g>
 
     <script id="main_script" type="text/javascript"><![CDATA[
@@ -31,22 +27,47 @@
         ///twitch();
 
         var pos = 0
-        var spacing_x = 1.15
-        var spacing_y = 1.1
+        var spacing_x = 40
+        var spacing_y = 40
         var num_cards = 3
         var cards_per_page = num_cards * num_cards
         
-        var deck_offset_x = 100
-        var deck_offset_y = 141
+        var deck_offset_x = 20
+        var deck_offset_y = 20
         var deck_scale = 1 / (num_cards+1)
         
         var deck = document.getElementById('deck')
         deck.setAttribute('transform','scale('+deck_scale+') translate('+deck_offset_x+' '+deck_offset_y+')')
         
         var main_panel = document.getElementById('main_panel')
-        main_panel.setAttribute('transform','scale(.88)')
+        main_panel.setAttribute('transform','scale(.95)')
         
-        
+        var line
+
+        line = document.getElementById('line0')
+        line.setAttribute('x1', 1*(1000 + spacing_x) - spacing_x/2)
+        line.setAttribute('x2', 1*(1000 + spacing_x) - spacing_x/2)
+        line.setAttribute('y1','0')
+        line.setAttribute('y2',(1410 + spacing_y/2)* num_cards + deck_offset_y/2 )
+
+        line = document.getElementById('line1')
+        line.setAttribute('x1', 2*(1000  + spacing_x) - spacing_x/2)
+        line.setAttribute('x2', 2*(1000  + spacing_x) - spacing_x/2)
+        line.setAttribute('y1','0')
+        line.setAttribute('y2',(1410 + spacing_y/2)* num_cards + deck_offset_y/2 )
+
+        line = document.getElementById('line2')
+        line.setAttribute('y1', 1*(1410 + spacing_y) - spacing_y/2)
+        line.setAttribute('y2', 1*(1410 + spacing_y) - spacing_y/2)
+        line.setAttribute('x1','0')
+        line.setAttribute('x2',(1000 + spacing_x/2)* num_cards  + deck_offset_x/2  )
+
+        line = document.getElementById('line3')
+        line.setAttribute('y1', 2*(1410 + spacing_y) - spacing_y/2)
+        line.setAttribute('y2', 2*(1410 + spacing_y) - spacing_y/2)
+        line.setAttribute('x1','0')
+        line.setAttribute('x2',(1000 + spacing_x/2 )* num_cards + deck_offset_x/2 )
+
         
         
         //main card object (deleted at end of script) 
@@ -60,7 +81,7 @@
             var hello = card.cloneNode(true)
 
             hello.id = (new Date).getTime()
-            hello.setAttribute('transform','translate('+(spacing_x*1000*(pos % num_cards))+' '+(spacing_y*1410*Math.floor(pos/num_cards))+')');
+            hello.setAttribute('transform','translate('+((spacing_x+1000)*(pos % num_cards))+' '+((spacing_y+1410)*Math.floor(pos/num_cards))+')');
             console.log(hello)
             var deck = document.getElementById('deck')
             deck.appendChild(hello)
