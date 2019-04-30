@@ -14,10 +14,6 @@
 
     <g id="main_panel" transform="scale(1.0)">
         <g id="deck">
-            <line id="line0" x1="0" y1="0" x2="0" y2="0" style="fill:none;stroke:#000;stroke-width:10;stroke-dasharray:1,20" />
-            <line id="line1" x1="0" y1="0" x2="0" y2="0" style="fill:none;stroke:#000;stroke-width:10;stroke-dasharray:1,20" />
-            <line id="line2" x1="0" y1="0" x2="0" y2="0" style="fill:none;stroke:#000;stroke-width:10;stroke-dasharray:1,20" />
-            <line id="line3" x1="0" y1="0" x2="0" y2="0" style="fill:none;stroke:#000;stroke-width:10;stroke-dasharray:1,20" />
         </g>
         
     </g>
@@ -26,49 +22,51 @@
 
         ///twitch();
 
-        var pos = 0
-        var spacing_x = 40
-        var spacing_y = 40
+
+        // main parameters
+        // main_scale should be adjusted according to paper size
+        // print preview and rough test print a very important
+        var spacing_x = 60
+        var spacing_y = 60        
         var num_cards = 3
+        var main_scale = 0.90
+        
+        var pos = 0
         var cards_per_page = num_cards * num_cards
         
-        var deck_offset_x = 20
-        var deck_offset_y = 20
+        var deck_offset_x = spacing_x / 2
+        var deck_offset_y = spacing_y / 2
         var deck_scale = 1 / (num_cards+1)
         
         var deck = document.getElementById('deck')
         deck.setAttribute('transform','scale('+deck_scale+') translate('+deck_offset_x+' '+deck_offset_y+')')
         
         var main_panel = document.getElementById('main_panel')
-        main_panel.setAttribute('transform','scale(.95)')
+        main_panel.setAttribute('transform','scale('+main_scale+')')
         
-        var line
-
-        line = document.getElementById('line0')
-        line.setAttribute('x1', 1*(1000 + spacing_x) - spacing_x/2)
-        line.setAttribute('x2', 1*(1000 + spacing_x) - spacing_x/2)
-        line.setAttribute('y1','0')
-        line.setAttribute('y2',(1410 + spacing_y/2)* num_cards + deck_offset_y/2 )
-
-        line = document.getElementById('line1')
-        line.setAttribute('x1', 2*(1000  + spacing_x) - spacing_x/2)
-        line.setAttribute('x2', 2*(1000  + spacing_x) - spacing_x/2)
-        line.setAttribute('y1','0')
-        line.setAttribute('y2',(1410 + spacing_y/2)* num_cards + deck_offset_y/2 )
-
-        line = document.getElementById('line2')
-        line.setAttribute('y1', 1*(1410 + spacing_y) - spacing_y/2)
-        line.setAttribute('y2', 1*(1410 + spacing_y) - spacing_y/2)
-        line.setAttribute('x1','0')
-        line.setAttribute('x2',(1000 + spacing_x/2)* num_cards  + deck_offset_x/2  )
-
-        line = document.getElementById('line3')
-        line.setAttribute('y1', 2*(1410 + spacing_y) - spacing_y/2)
-        line.setAttribute('y2', 2*(1410 + spacing_y) - spacing_y/2)
-        line.setAttribute('x1','0')
-        line.setAttribute('x2',(1000 + spacing_x/2 )* num_cards + deck_offset_x/2 )
-
+        var ns = 'http://www.w3.org/2000/svg'
         
+        for (var ll=0;ll<num_cards;ll++) {
+        
+            var vline = document.createElementNS(ns, 'line')   
+            vline.setAttribute('id', 'vline'+ll)
+            vline.setAttribute('x1', (ll+1)*(1000 + spacing_x) - spacing_x/2)
+            vline.setAttribute('x2', (ll+1)*(1000 + spacing_x) - spacing_x/2)
+            vline.setAttribute('y1','0')
+            vline.setAttribute('y2',(1410 + spacing_y/2)* num_cards + deck_offset_y/2 )
+            vline.setAttribute('style','stroke:#000;stroke-width:1;stroke-linecap:round;stroke-dasharray:10,100;fill:none')
+            deck.appendChild(vline)
+
+            var hline = document.createElementNS(ns, 'line')   
+            vline.setAttribute('id', 'hline'+ll)  
+            hline.setAttribute('y1', (ll+1)*(1410 + spacing_y) - spacing_y/2)
+            hline.setAttribute('y2', (ll+1)*(1410 + spacing_y) - spacing_y/2)
+            hline.setAttribute('x1','0')
+            hline.setAttribute('x2',(1000 + spacing_x/2)* num_cards  + deck_offset_x/2  )
+            hline.setAttribute('style','stroke:#000;stroke-width:1;stroke-linecap:round;stroke-dasharray:10,100;fill:none')
+            deck.appendChild(hline)
+            
+        }
         
         //main card object (deleted at end of script) 
 
@@ -104,7 +102,7 @@
             // no page number, run test page        
             v = []
             //all numbers and extra each suit
-            for (var nn=0;nn<8;nn++) v.push(String(nn))
+            for (var nn=0;nn<28;nn++) v.push(String(nn))
         }
 
         //print cards only to fill page
