@@ -1,0 +1,204 @@
+<html lang="en"><head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        
+<meta http-equiv="cache-control" content="max-age=0">
+<meta http-equiv="cache-control" content="no-cache">
+
+        <link rel="shortcut icon" href="/static/favicon.ico">
+        <!--
+<link rel="stylesheet" href="/static/lib/bootstrap/css/bootstrap.min.css">
+        <link rel="stylesheet" href="/static/lib/morris/0.5.1/morris.css">
+        -->
+        
+        <title>Welcome to Battleships!</title>
+        
+
+	
+        <script src="lib/jquery/jquery.ui.touch-punch.min.js"></script>
+    <script src="lib/d3/d3.v3.min.js" charset="utf-8"></script>
+    <script src="lib/jquery/jquery-3.4.1.min.js"></script>
+    <script src="lib/jquery/jquery-ui.min.js"></script>
+
+        <style>
+            body {
+                padding: 20px;
+            }
+            @media (max-width: 980px) {
+                body {
+                    padding: 0;
+                }
+            }
+        </style>
+
+    </head>
+    
+    <body style="cursor: auto;">
+        <div>
+		Battleships:
+        <a href="/index">Home</a> |
+        
+        <a href="/logout">Logout</a>
+        
+   
+		</div>
+		
+        <hr>
+        
+        
+        
+
+
+
+<style>
+
+
+table {  border-spacing: 5px; border: none; table-layout: fixed; }
+td, tr { border: none; margin: 0; padding: 0 }
+
+td  { width:25px; height:25px; }
+.water { background-color: cyan }
+.miss { background-color: yellow }
+.hit { background-color: red }
+.boat { background-color: grey }
+.ui-draggable-dragging { background-color: green }
+
+</style>
+Stage: <span id="game_stage">setup</span>
+<span id="whose_turn"></span>
+<div id="myboard" style="display:inherit">
+    <h2>robin</h2>
+    <div>
+        <div id="sea">
+            <table id="seabed" class="sea">
+                
+                <tbody><tr class="sea"><td id="you_c0r0" class="water seablock sea"></td><td id="you_c1r0" class="water seablock sea"></td><td id="you_c2r0" class="water seablock sea"></td><td id="you_c3r0" class="water seablock sea"></td><td id="you_c4r0" class="water seablock sea"></td><td id="you_c5r0" class="water seablock sea"></td><td id="you_c6r0" class="water seablock sea"></td><td id="you_c7r0" class="water seablock sea"></td><td id="you_c8r0" class="water seablock sea"></td><td id="you_c9r0" class="water seablock sea"></td></tr>
+                <tr class="sea"><td id="you_c0r1" class="water seablock sea"></td><td id="you_c1r1" class="water seablock sea"></td><td id="you_c2r1" class="water seablock sea"></td><td id="you_c3r1" class="water seablock sea"></td><td id="you_c4r1" class="water seablock sea"></td><td id="you_c5r1" class="water seablock sea"></td><td id="you_c6r1" class="water seablock sea"></td><td id="you_c7r1" class="water seablock sea"></td><td id="you_c8r1" class="water seablock sea"></td><td id="you_c9r1" class="water seablock sea"></td></tr>
+                <tr class="sea"><td id="you_c0r2" class="water seablock sea"></td><td id="you_c1r2" class="water seablock sea"></td><td id="you_c2r2" class="water seablock sea"></td><td id="you_c3r2" class="water seablock sea"></td><td id="you_c4r2" class="water seablock sea"></td><td id="you_c5r2" class="water seablock sea"></td><td id="you_c6r2" class="water seablock sea"></td><td id="you_c7r2" class="water seablock sea"></td><td id="you_c8r2" class="water seablock sea"></td><td id="you_c9r2" class="water seablock sea"></td></tr>
+                <tr class="sea"><td id="you_c0r3" class="water seablock sea"></td><td id="you_c1r3" class="water seablock sea"></td><td id="you_c2r3" class="water seablock sea"></td><td id="you_c3r3" class="water seablock sea"></td><td id="you_c4r3" class="water seablock sea"></td><td id="you_c5r3" class="water seablock sea"></td><td id="you_c6r3" class="water seablock sea"></td><td id="you_c7r3" class="water seablock sea"></td><td id="you_c8r3" class="water seablock sea"></td><td id="you_c9r3" class="water seablock sea"></td></tr>
+                <tr class="sea"><td id="you_c0r4" class="water seablock sea"></td><td id="you_c1r4" class="water seablock sea"></td><td id="you_c2r4" class="water seablock sea"></td><td id="you_c3r4" class="water seablock sea"></td><td id="you_c4r4" class="water seablock sea"></td><td id="you_c5r4" class="water seablock sea"></td><td id="you_c6r4" class="water seablock sea"></td><td id="you_c7r4" class="water seablock sea"></td><td id="you_c8r4" class="water seablock sea"></td><td id="you_c9r4" class="water seablock sea"></td></tr>
+                <tr class="sea"><td id="you_c0r5" class="water seablock sea"></td><td id="you_c1r5" class="water seablock sea"></td><td id="you_c2r5" class="water seablock sea"></td><td id="you_c3r5" class="water seablock sea"></td><td id="you_c4r5" class="water seablock sea"></td><td id="you_c5r5" class="water seablock sea"></td><td id="you_c6r5" class="water seablock sea"></td><td id="you_c7r5" class="water seablock sea"></td><td id="you_c8r5" class="water seablock sea"></td><td id="you_c9r5" class="water seablock sea"></td></tr>
+                <tr class="sea"><td id="you_c0r6" class="water seablock sea"></td><td id="you_c1r6" class="water seablock sea"></td><td id="you_c2r6" class="water seablock sea"></td><td id="you_c3r6" class="water seablock sea"></td><td id="you_c4r6" class="water seablock sea"></td><td id="you_c5r6" class="water seablock sea"></td><td id="you_c6r6" class="water seablock sea"></td><td id="you_c7r6" class="water seablock sea"></td><td id="you_c8r6" class="water seablock sea"></td><td id="you_c9r6" class="water seablock sea"></td></tr>
+                <tr class="sea"><td id="you_c0r7" class="water seablock sea"></td><td id="you_c1r7" class="water seablock sea"></td><td id="you_c2r7" class="water seablock sea"></td><td id="you_c3r7" class="water seablock sea"></td><td id="you_c4r7" class="water seablock sea"></td><td id="you_c5r7" class="water seablock sea"></td><td id="you_c6r7" class="water seablock sea"></td><td id="you_c7r7" class="water seablock sea"></td><td id="you_c8r7" class="water seablock sea"></td><td id="you_c9r7" class="water seablock sea"></td></tr>
+                <tr class="sea"><td id="you_c0r8" class="water seablock sea"></td><td id="you_c1r8" class="water seablock sea"></td><td id="you_c2r8" class="water seablock sea"></td><td id="you_c3r8" class="water seablock sea"></td><td id="you_c4r8" class="water seablock sea"></td><td id="you_c5r8" class="water seablock sea"></td><td id="you_c6r8" class="water seablock sea"></td><td id="you_c7r8" class="water seablock sea"></td><td id="you_c8r8" class="water seablock sea"></td><td id="you_c9r8" class="water seablock sea"></td></tr>
+                <tr class="sea"><td id="you_c0r9" class="water seablock sea"></td><td id="you_c1r9" class="water seablock sea"></td><td id="you_c2r9" class="water seablock sea"></td><td id="you_c3r9" class="water seablock sea"></td><td id="you_c4r9" class="water seablock sea"></td><td id="you_c5r9" class="water seablock sea"></td><td id="you_c6r9" class="water seablock sea"></td><td id="you_c7r9" class="water seablock sea"></td><td id="you_c8r9" class="water seablock sea"></td><td id="you_c9r9" class="water seablock sea"></td></tr>
+            </tbody></table>
+        </div>
+        
+        <div id="boats">
+        <div id="carrier" class="boat dragboat ui-draggable ui-draggable-handle" style="position: absolute; width: 145px; height: 25px;"></div><div id="boat_c1r6w1h5aw25ah115" class="boat dragboat ui-draggable ui-draggable-handle" style="position: absolute; width: 25px; height: 115px; left: 13px; top: 253.813px;"></div><div id="submarine" class="boat dragboat ui-draggable ui-draggable-handle" style="position: absolute; width: 85px; height: 25px;"></div><div id="boat_c7r5w1h3aw25ah85" class="boat dragboat ui-draggable ui-draggable-handle" style="position: absolute; width: 25px; height: 85px; left: 163px; top: 223.813px;"></div><div id="destroyer" class="boat dragboat ui-draggable ui-draggable-handle" style="position: absolute; width: 55px; height: 25px;"></div></div>
+        
+    </div>
+</div>
+
+<div id="theirboard" style="display:none">
+    <h2 id="opponents_name">no player yet</h2>
+    <table>
+        
+        <tbody><tr><td id="opp_c1r1" class="water"></td><td id="opp_c2r1" class="water"></td><td id="opp_c3r1" class="water"></td><td id="opp_c4r1" class="water"></td><td id="opp_c5r1" class="water"></td><td id="opp_c6r1" class="water"></td><td id="opp_c7r1" class="water"></td><td id="opp_c8r1" class="water"></td><td id="opp_c9r1" class="water"></td><td id="opp_c10r1" class="water"></td></tr>
+        <tr><td id="opp_c1r2" class="water"></td><td id="opp_c2r2" class="water"></td><td id="opp_c3r2" class="water"></td><td id="opp_c4r2" class="water"></td><td id="opp_c5r2" class="water"></td><td id="opp_c6r2" class="water"></td><td id="opp_c7r2" class="water"></td><td id="opp_c8r2" class="water"></td><td id="opp_c9r2" class="water"></td><td id="opp_c10r2" class="water"></td></tr>
+        <tr><td id="opp_c1r3" class="water"></td><td id="opp_c2r3" class="water"></td><td id="opp_c3r3" class="water"></td><td id="opp_c4r3" class="water"></td><td id="opp_c5r3" class="water"></td><td id="opp_c6r3" class="water"></td><td id="opp_c7r3" class="water"></td><td id="opp_c8r3" class="water"></td><td id="opp_c9r3" class="water"></td><td id="opp_c10r3" class="water"></td></tr>
+        <tr><td id="opp_c1r4" class="water"></td><td id="opp_c2r4" class="water"></td><td id="opp_c3r4" class="water"></td><td id="opp_c4r4" class="water"></td><td id="opp_c5r4" class="water"></td><td id="opp_c6r4" class="water"></td><td id="opp_c7r4" class="water"></td><td id="opp_c8r4" class="water"></td><td id="opp_c9r4" class="water"></td><td id="opp_c10r4" class="water"></td></tr>
+        <tr><td id="opp_c1r5" class="water"></td><td id="opp_c2r5" class="water"></td><td id="opp_c3r5" class="water"></td><td id="opp_c4r5" class="water"></td><td id="opp_c5r5" class="water"></td><td id="opp_c6r5" class="water"></td><td id="opp_c7r5" class="water"></td><td id="opp_c8r5" class="water"></td><td id="opp_c9r5" class="water"></td><td id="opp_c10r5" class="water"></td></tr>
+        <tr><td id="opp_c1r6" class="water"></td><td id="opp_c2r6" class="water"></td><td id="opp_c3r6" class="water"></td><td id="opp_c4r6" class="water"></td><td id="opp_c5r6" class="water"></td><td id="opp_c6r6" class="water"></td><td id="opp_c7r6" class="water"></td><td id="opp_c8r6" class="water"></td><td id="opp_c9r6" class="water"></td><td id="opp_c10r6" class="water"></td></tr>
+        <tr><td id="opp_c1r7" class="water"></td><td id="opp_c2r7" class="water"></td><td id="opp_c3r7" class="water"></td><td id="opp_c4r7" class="water"></td><td id="opp_c5r7" class="water"></td><td id="opp_c6r7" class="water"></td><td id="opp_c7r7" class="water"></td><td id="opp_c8r7" class="water"></td><td id="opp_c9r7" class="water"></td><td id="opp_c10r7" class="water"></td></tr>
+        <tr><td id="opp_c1r8" class="water"></td><td id="opp_c2r8" class="water"></td><td id="opp_c3r8" class="water"></td><td id="opp_c4r8" class="water"></td><td id="opp_c5r8" class="water"></td><td id="opp_c6r8" class="water"></td><td id="opp_c7r8" class="water"></td><td id="opp_c8r8" class="water"></td><td id="opp_c9r8" class="water"></td><td id="opp_c10r8" class="water"></td></tr>
+        <tr><td id="opp_c1r9" class="water"></td><td id="opp_c2r9" class="water"></td><td id="opp_c3r9" class="water"></td><td id="opp_c4r9" class="water"></td><td id="opp_c5r9" class="water"></td><td id="opp_c6r9" class="water"></td><td id="opp_c7r9" class="water"></td><td id="opp_c8r9" class="water"></td><td id="opp_c9r9" class="water"></td><td id="opp_c10r9" class="water"></td></tr>
+        <tr><td id="opp_c1r10" class="water"></td><td id="opp_c2r10" class="water"></td><td id="opp_c3r10" class="water"></td><td id="opp_c4r10" class="water"></td><td id="opp_c5r10" class="water"></td><td id="opp_c6r10" class="water"></td><td id="opp_c7r10" class="water"></td><td id="opp_c8r10" class="water"></td><td id="opp_c9r10" class="water"></td><td id="opp_c10r10" class="water"></td></tr>
+    </tbody></table>
+</div>
+<br>
+<form>
+<input type="button" value="swap" onclick="swap()">
+<input type="button" value="ping" onclick="ping()">
+<input type="button" value="ready" onclick="ready('robin','95edc0e7-ee7f-48ab-895d-e618f87084c8')">
+</form>
+<div id="output">poo</div>
+
+
+<script src="/static/lib/socket-io/socket.io.min.js"></script>
+<script src="/static/lib/d3/d3.v4.min.js"></script>
+<script src="/static/battleships.js?95edc0e7-ee7f-48ab-895d-e618f87084c8"></script>
+<script>
+
+//document.addEventListener('mousedown', function(e) { document.getElementById('output').innerHTML='md '+e; console.log(e) })
+//document.addEventListener('mousemove', function(e) { document.getElementById('output').innerHTML='mm '+e })
+//document.addEventListener('touchstart', function(e) { document.getElementById('output').innerHTML='ts '+e })
+//document.addEventListener('touchmove', function(e) { document.getElementById('output').innerHTML='tm '+e })
+//document.addEventListener('touchend', function(e) { document.getElementById('output').innerHTML='te '+e })
+
+$(function() {
+
+
+    var boats_data = [{'length': 5, 'name': 'carrier', 'r': -1, 'c': -1, 'x': -1, 'y': -1, 'horizontal': 1, 'width': 5, 'height': 1}, {'length': 4, 'name': 'battleship', 'r': -1, 'c': -1, 'x': -1, 'y': -1, 'horizontal': 1, 'width': 4, 'height': 1}, {'length': 3, 'name': 'submarine', 'r': -1, 'c': -1, 'x': -1, 'y': -1, 'horizontal': 1, 'width': 3, 'height': 1}, {'length': 3, 'name': 'cruiser', 'r': -1, 'c': -1, 'x': -1, 'y': -1, 'horizontal': 1, 'width': 3, 'height': 1}, {'length': 2, 'name': 'destroyer', 'r': -1, 'c': -1, 'x': -1, 'y': -1, 'horizontal': 1, 'width': 2, 'height': 1}]
+    var boat = d3.select('#boats').selectAll('.boat').data(boats_data)
+    var boatEnter = boat.enter().append('div')
+    
+    boatEnter.attr('id', function(d,i) { return d.name })
+        .attr('class', 'boat dragboat')
+        .style('position', 'absolute')
+        .style('width', function(d,i) { return `${d.width * 25 + (d.width - 1) * 5 }px` })
+        .style('height', function(d,i) { return `${d.height * 25 + (d.height - 1) * 5 }px` })
+        .on('mousedown', function(d,i) { console.log(d,i,'down',d3.event); d.dragging = false })
+        .on('mouseup', function(d,i) { console.log(d,i,'up',d3.event) })
+
+
+    $( ".dragboat" ).draggable(
+        { "snap": ".seablock",
+            "snapMode": "inner",
+            "containment": "table.sea",
+            "drag": function(event,ui) {
+                var p = $('#seabed').position()
+                var r = Math.round((ui.offset.top - p.top) / 25) + 1
+                var c = Math.round((ui.offset.left - p.left) / 25) + 1
+                var ah = Number(event.target.style.height.replace(/[^0-9]*/g,''))
+                var aw = Number(event.target.style.width.replace(/[^0-9]*/g,''))
+                var h = Math.round(( ah - 2 ) /25)
+                var w = Math.round(( aw - 2) /25)
+                //console.log(ui,event.target,c,r,w,h,aw,ah)
+                event.target.id=`boat_c${c}r${r}w${w}h${h}aw${aw}ah${ah}`  
+                var blob = d3.select(`#${event.target.id}`).datum()
+                blob.dragging = true
+                d3.select(`#${event.target.id}`).datum( blob )
+                console.log(d3.select(`#${event.target.id}`).datum())
+            }
+        }
+    );
+
+
+    //$( ".dragboat" ).doubletap(function() { alert('taptap')})
+    $( ".boat" ).bind('mouseup',function() { 
+var blob = d3.select(`#${event.target.id}`).datum()
+                if (blob.dragging==true) return
+        var text = event.target.id.replace(/[^0-9]/g," ").replace(/\s\s+/g, ' ').trim().split(' ')
+        //console.log(text)
+
+        var c = text[0]
+        var r = text[1]
+        var w = text[2]
+        var h = text[3]
+        var aw = text[4]
+        var ah = text[5]
+
+        //console.log(c,r,w,h,aw,ah)
+
+        //rotate
+        event.target.style.height = aw+'px'
+        event.target.style.width = ah+'px'
+
+        //account for rotation danger, these are swapped
+        event.target.id=`boat_c${c}r${r}w${h}h${w}aw${ah}ah${aw}`
+       
+        
+        
+    })
+});
+
+
+</script>
+
+    
+    
+    
+    
+</body></html>
