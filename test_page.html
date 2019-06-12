@@ -141,6 +141,7 @@ $(function() {
 
 
 function dothing(target) { 
+        if (target) alert(target)
         console.log('do thing',target)
     
         var blob = d3.select(`#${event.target.id}`).datum()
