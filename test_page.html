@@ -123,7 +123,8 @@ document.addEventListener('mousedown', function(e) { document.getElementById('ou
 document.addEventListener('touchstart', function(e) { document.getElementById('output').innerHTML+='ts ' })
 document.addEventListener('touchmove', function(e) { document.getElementById('output').innerHTML+='tm ' })
 document.addEventListener('touchend', function(e) { document.getElementById('output').innerHTML+='te:'+e.target.className+' '; if (e.target.className.index('boat')) { dothing() } })
-document.addEventListener('mouseup', function(e) { document.getElementById('output').innerHTML+='mu:'+e.target.className+' ' })
+document.addEventListener('mouseup', function(e) { document.getElementById('output').innerHTML+='mu:'+e.target.className+' '; console.log(e.target.classList.contains('boat')); if (e.target.classList.contains('boat')) { dothing(e.target) } })
+//document.addEventListener('mouseup', function(e) { document.getElementById('output').innerHTML+='mu:'+e.target.className+' ' })
 
 $(function() {
 
@@ -141,7 +142,8 @@ $(function() {
         .on('mouseup', function(d,i) { console.log(d,i,'up',d3.event) })
 
 
-function dothing() { 
+function dothing(target) { 
+        console.log('do thing',target)
     
         var blob = d3.select(`#${event.target.id}`).datum()
         console.log(event,event.timeStamp,blob.time,event.timeStamp-blob.time)
@@ -188,7 +190,7 @@ function dothing() {
                 var blob = d3.select(`#${event.target.id}`).datum()
                 blob.dragging = true
                 d3.select(`#${event.target.id}`).datum( blob )
-                console.log('drag',d3.select(`#${event.target.id}`).datum())
+                //console.log('drag',d3.select(`#${event.target.id}`).datum())
             }
         }
     );
