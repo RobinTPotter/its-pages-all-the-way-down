@@ -118,10 +118,8 @@ Stage: <span id="game_stage">setup</span>
 <script>
 
 document.addEventListener('mousedown', function(e) { document.getElementById('output').innerHTML+='md '; console.log(e) })
-/document.addEventListener('mouseup', function(e) { document.getElementById('output').innerHTML+='mu '; console.log(e) })
-//document.addEventListener('mousemove', function(e) { document.getElementById('output').innerHTML+='mm ' })
+//document.addEventListener('mouseup', function(e) { document.getElementById('output').innerHTML+='mu '; console.log(e) })
 document.addEventListener('touchstart', function(e) { document.getElementById('output').innerHTML+='ts ' })
-//document.addEventListener('touchmove', function(e) { document.getElementById('output').innerHTML+='tm ' })
 document.addEventListener('touchend', function(e) { document.getElementById('output').innerHTML+='te:'+e.target.className+' '; console.log(e.target.classList.contains('boat')); if (e.target.classList.contains('boat')) { dothing(e.target) } })
 document.addEventListener('mouseup', function(e) { document.getElementById('output').innerHTML+='mu:'+e.target.className+' '; console.log(e.target.classList.contains('boat')); if (e.target.classList.contains('boat')) { dothing(e.target) } })
 //document.addEventListener('mouseup', function(e) { document.getElementById('output').innerHTML+='mu:'+e.target.className+' ' })
