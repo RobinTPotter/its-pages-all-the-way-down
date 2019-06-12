@@ -135,7 +135,7 @@ $(function() {
         .style('position', 'absolute')
         .style('width', function(d,i) { return `${d.width * 25 + (d.width - 1) * 5 }px` })
         .style('height', function(d,i) { return `${d.height * 25 + (d.height - 1) * 5 }px` })
-        .on('mousedown', function(d,i) { console.log(d,i,'down',d3.event); d.dragging = false })
+        .on('mousedown', function(d,i) { console.log(d,i,'down',d3.event); d.dragging = false; d.time = d3.event.timeStamp })
         .on('mouseup', function(d,i) { console.log(d,i,'up',d3.event) })
 
 
@@ -164,8 +164,12 @@ $(function() {
 
     //$( ".dragboat" ).doubletap(function() { alert('taptap')})
     $( ".boat" ).bind('mouseup',function() { 
-var blob = d3.select(`#${event.target.id}`).datum()
-                if (blob.dragging==true) return
+    
+        var blob = d3.select(`#${event.target.id}`).datum()
+        console.log(event,event.timeStamp,blob.time,event.timeStamp-blob.time)
+        if (blob.dragging==true | (event.timeStamp-blob.time)>200) return
+        blob.time = event.timeStamp
+        
         var text = event.target.id.replace(/[^0-9]/g," ").replace(/\s\s+/g, ' ').trim().split(' ')
         //console.log(text)
 
@@ -185,7 +189,7 @@ var blob = d3.select(`#${event.target.id}`).datum()
         //account for rotation danger, these are swapped
         event.target.id=`boat_c${c}r${r}w${h}h${w}aw${ah}ah${aw}`
        
-        
+        d3.select(`#${event.target.id}`).datum(blob)
         
     })
 });
