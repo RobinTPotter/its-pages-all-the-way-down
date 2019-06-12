@@ -121,7 +121,7 @@ document.addEventListener('mousedown', function(e) { document.getElementById('ou
 /document.addEventListener('mouseup', function(e) { document.getElementById('output').innerHTML+='mu '; console.log(e) })
 //document.addEventListener('mousemove', function(e) { document.getElementById('output').innerHTML+='mm ' })
 document.addEventListener('touchstart', function(e) { document.getElementById('output').innerHTML+='ts ' })
-document.addEventListener('touchmove', function(e) { document.getElementById('output').innerHTML+='tm ' })
+//document.addEventListener('touchmove', function(e) { document.getElementById('output').innerHTML+='tm ' })
 document.addEventListener('touchend', function(e) { document.getElementById('output').innerHTML+='te:'+e.target.className+' '; console.log(e.target.classList.contains('boat')); if (e.target.classList.contains('boat')) { dothing(e.target) } })
 document.addEventListener('mouseup', function(e) { document.getElementById('output').innerHTML+='mu:'+e.target.className+' '; console.log(e.target.classList.contains('boat')); if (e.target.classList.contains('boat')) { dothing(e.target) } })
 //document.addEventListener('mouseup', function(e) { document.getElementById('output').innerHTML+='mu:'+e.target.className+' ' })
