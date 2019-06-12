@@ -86,8 +86,7 @@ Stage: <span id="game_stage">setup</span>
         </div>
         
         <div id="boats">
-        <div id="carrier" class="boat dragboat ui-draggable ui-draggable-handle" style="position: absolute; width: 145px; height: 25px;"></div><div id="boat_c1r6w1h5aw25ah115" class="boat dragboat ui-draggable ui-draggable-handle" style="position: absolute; width: 25px; height: 115px; left: 13px; top: 253.813px;"></div><div id="submarine" class="boat dragboat ui-draggable ui-draggable-handle" style="position: absolute; width: 85px; height: 25px;"></div><div id="boat_c7r5w1h3aw25ah85" class="boat dragboat ui-draggable ui-draggable-handle" style="position: absolute; width: 25px; height: 85px; left: 163px; top: 223.813px;"></div><div id="destroyer" class="boat dragboat ui-draggable ui-draggable-handle" style="position: absolute; width: 55px; height: 25px;"></div></div>
-        
+       
     </div>
 </div>
 
@@ -157,7 +156,7 @@ $(function() {
                 var blob = d3.select(`#${event.target.id}`).datum()
                 blob.dragging = true
                 d3.select(`#${event.target.id}`).datum( blob )
-                console.log(d3.select(`#${event.target.id}`).datum())
+                console.log('drag',d3.select(`#${event.target.id}`).datum())
             }
         }
     );
