@@ -164,7 +164,7 @@ $(function() {
 
 
     //$( ".dragboat" ).doubletap(function() { alert('taptap')})
-    $( ".boat" ).bind('mouseup',function() { 
+    $( ".boat" ).bind('mouseup touchend',function() { 
     
         var blob = d3.select(`#${event.target.id}`).datum()
         console.log(event,event.timeStamp,blob.time,event.timeStamp-blob.time)
