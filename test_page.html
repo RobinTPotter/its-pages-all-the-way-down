@@ -118,11 +118,12 @@ Stage: <span id="game_stage">setup</span>
 <script>
 
 document.addEventListener('mousedown', function(e) { document.getElementById('output').innerHTML+='md '; console.log(e) })
-document.addEventListener('mouseup', function(e) { document.getElementById('output').innerHTML+='mu '; console.log(e) })
+/document.addEventListener('mouseup', function(e) { document.getElementById('output').innerHTML+='mu '; console.log(e) })
 //document.addEventListener('mousemove', function(e) { document.getElementById('output').innerHTML+='mm ' })
 document.addEventListener('touchstart', function(e) { document.getElementById('output').innerHTML+='ts ' })
 document.addEventListener('touchmove', function(e) { document.getElementById('output').innerHTML+='tm ' })
-document.addEventListener('touchend', function(e) { document.getElementById('output').innerHTML+='te ' })
+document.addEventListener('touchend', function(e) { document.getElementById('output').innerHTML+='te:'+e.target.className+' '; if (e.target.className.index('boat')) { dothing() } })
+document.addEventListener('mouseup', function(e) { document.getElementById('output').innerHTML+='mu:'+e.target.className+' ' })
 
 $(function() {
 
@@ -140,31 +141,7 @@ $(function() {
         .on('mouseup', function(d,i) { console.log(d,i,'up',d3.event) })
 
 
-    $( ".dragboat" ).draggable(
-        { "snap": ".seablock",
-            "snapMode": "inner",
-            "containment": "table.sea",
-            "drag": function(event,ui) {
-                var p = $('#seabed').position()
-                var r = Math.round((ui.offset.top - p.top) / 25) + 1
-                var c = Math.round((ui.offset.left - p.left) / 25) + 1
-                var ah = Number(event.target.style.height.replace(/[^0-9]*/g,''))
-                var aw = Number(event.target.style.width.replace(/[^0-9]*/g,''))
-                var h = Math.round(( ah - 2 ) /25)
-                var w = Math.round(( aw - 2) /25)
-                //console.log(ui,event.target,c,r,w,h,aw,ah)
-                event.target.id=`boat_c${c}r${r}w${w}h${h}aw${aw}ah${ah}`  
-                var blob = d3.select(`#${event.target.id}`).datum()
-                blob.dragging = true
-                d3.select(`#${event.target.id}`).datum( blob )
-                console.log('drag',d3.select(`#${event.target.id}`).datum())
-            }
-        }
-    );
-
-
-    //$( ".dragboat" ).doubletap(function() { alert('taptap')})
-    $( ".boat" ).bind('mouseup touchend',function() { 
+function dothing() { 
     
         var blob = d3.select(`#${event.target.id}`).datum()
         console.log(event,event.timeStamp,blob.time,event.timeStamp-blob.time)
@@ -192,7 +169,33 @@ $(function() {
        
         d3.select(`#${event.target.id}`).datum(blob)
         
-    })
+    }
+
+    $( ".dragboat" ).draggable(
+        { "snap": ".seablock",
+            "snapMode": "inner",
+            "containment": "table.sea",
+            "drag": function(event,ui) {
+                var p = $('#seabed').position()
+                var r = Math.round((ui.offset.top - p.top) / 25) + 1
+                var c = Math.round((ui.offset.left - p.left) / 25) + 1
+                var ah = Number(event.target.style.height.replace(/[^0-9]*/g,''))
+                var aw = Number(event.target.style.width.replace(/[^0-9]*/g,''))
+                var h = Math.round(( ah - 2 ) /25)
+                var w = Math.round(( aw - 2) /25)
+                //console.log(ui,event.target,c,r,w,h,aw,ah)
+                event.target.id=`boat_c${c}r${r}w${w}h${h}aw${aw}ah${ah}`  
+                var blob = d3.select(`#${event.target.id}`).datum()
+                blob.dragging = true
+                d3.select(`#${event.target.id}`).datum( blob )
+                console.log('drag',d3.select(`#${event.target.id}`).datum())
+            }
+        }
+    );
+
+
+    //$( ".dragboat" ).doubletap(function() { alert('taptap')})
+    $( ".boat" ).bind('mouseup touchend', dothing)
 });
 
 
