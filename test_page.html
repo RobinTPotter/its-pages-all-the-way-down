@@ -144,7 +144,6 @@ $(function() {
         
         if (!event.target.classList.contains('boat')) return
         
-        document.getElementById('output').innerHTML+='dt:'+event.target.classList+' ';
     
         var blob = d3.select(`#${event.target.id}`).datum()
         
@@ -153,6 +152,7 @@ $(function() {
         if (blob.dragging==true | (event.timeStamp-blob.time)>200 | (event.timeStamp-blob.time)==0) return
         blob.time = event.timeStamp
         
+        document.getElementById('output').innerHTML+='dt:'+event.target.classList+' ';
         var text = event.target.id.replace(/[^0-9]/g," ").replace(/\s\s+/g, ' ').trim().split(' ')
         //console.log(text)
 
