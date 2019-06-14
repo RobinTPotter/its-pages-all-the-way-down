@@ -136,7 +136,9 @@ $(function() {
         .style('width', function(d,i) { return `${d.width * 25 + (d.width - 1) * 5 }px` })
         .style('height', function(d,i) { return `${d.height * 25 + (d.height - 1) * 5 }px` })
         .on('dragstart', drag)
+        .on('touchmove', drag)
         .on('drop', drop)
+        .on('touchend', drop)
         .on('click', spin)
         
     function drag(me) {  
