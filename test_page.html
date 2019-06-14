@@ -136,13 +136,18 @@ $(function() {
         .style('width', function(d,i) { return `${d.width * 25 + (d.width - 1) * 5 }px` })
         .style('height', function(d,i) { return `${d.height * 25 + (d.height - 1) * 5 }px` })
         .on('dragstart', drag)
+        .on('mousedown', starttouch)
         .on('touchmove', drag)
         .on('drop', drop)
         .on('touchend', drop)
-        .on('touchstart', spin)
+        .on('touchstart', starttouch)
         .on('click', spin)
         
-        
+       
+    function starttouch(me) {
+        me.timeStamp = d3.event.timeStamp
+        console.log(me)
+    }
     
     function drag(me) {  
         console.log('drag', me,d3.event.target)
@@ -158,12 +163,14 @@ $(function() {
     }
     
     function drop(me) {
-        if ((me.timeStamp+300) > d3.event.timeStamp) spin(me)
     
-        console.log('drop', me,d3.event.target)
         ev = d3.event
         ev.preventDefault();
         var data = ev.dataTransfer.getData("text");
+        var boat = d3.select('#'+data).datum()
+        console.log('drop', me, d3.event.target, boat )
+        console.log((boat.timeStamp+300) , d3.event.timeStamp)
+        if ((boat.timeStamp+300) > d3.event.timeStamp) spin(me)
         //ev.target.appendChild(document.getElementById(data));   
         //console.log(document.getElementById(data),  ev.target  )     
         document.getElementById(data).style.top = ev.target.style.top        
@@ -174,7 +181,8 @@ $(function() {
                 
         //var text = event.target.id.replace(/[^0-9]/g," ").replace(/\s\s+/g, ' ').trim().split(' ')
         console.log('spin', me,d3.event.target)
-   document.getElementById('output').innerHTML+='! '
+        document.getElementById('output').innerHTML+='! '
+        
         var c = text[0]
         var r = text[1]
         var w = text[2]
