@@ -139,8 +139,14 @@ $(function() {
         .on('touchmove', drag)
         .on('drop', drop)
         .on('touchend', drop)
+        .on('touchstart', starttouch)
         .on('click', spin)
         
+        
+    function starttouch(me) {
+        me.timeStamp = d3.event.timeStamp
+    }
+    
     function drag(me) {  
         console.log('drag', me,d3.event.target)
         console.log('drag start', d3.event)  
@@ -155,6 +161,8 @@ $(function() {
     }
     
     function drop(me) {
+        if ((me.timeStamp+300) > d3.event.timeStamp) spin(me)
+    
         console.log('drop', me,d3.event.target)
         ev = d3.event
         ev.preventDefault();
