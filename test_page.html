@@ -134,24 +134,18 @@ $(function() {
         .style('position', 'absolute')
         .style('width', function(d,i) { return `${d.width * 25 + (d.width - 1) * 5 }px` })
         .style('height', function(d,i) { return `${d.height * 25 + (d.height - 1) * 5 }px` })
-        .on('mousedown', function(d,i) { console.log(d,i,'down',d3.event); d.dragging = false; d.time = d3.event.timeStamp })
-        .on('mouseup', function(d,i) { console.log(d,i,'up',d3.event) })
-
-
+    
+    var cantwist = true
+    var last_time = 0
+    
     function dothing() { 
         
         
+        if (last_time+200 > event.timeStamp) return
         
-        if (!event.target.classList.contains('boat')) return
-        
-    
-        var blob = d3.select(`#${event.target.id}`).datum()
-        
-        console.log(event.timeStamp-blob.time)
-        
-        if (blob.dragging==true | (event.timeStamp-blob.time)>200 | (event.timeStamp-blob.time)==0) return
-        blob.time = event.timeStamp
-        
+        console.log('can twist',cantwist)
+        if (!cantwist) { cantwist = true; return }
+                
         document.getElementById('output').innerHTML+='dt:'+event.target.classList+' ';
         var text = event.target.id.replace(/[^0-9]/g," ").replace(/\s\s+/g, ' ').trim().split(' ')
         //console.log(text)
@@ -171,14 +165,13 @@ $(function() {
 
         //account for rotation danger, these are swapped
         event.target.id=`boat_c${c}r${r}w${h}h${w}aw${ah}ah${aw}`
-       
-        d3.select(`#${event.target.id}`).datum(blob)
-        
+       console.log('twisted')
+        last_time = event.timeStamp
     }
     
-    document.addEventListener('touchend', function(e) {  console.log(e.target.classList.contains('boat')); if (e.target.classList.contains('boat')) { dothing(e.target) } })
-    document.addEventListener('mouseup', function(e) {  console.log(e.target.classList.contains('boat')); if (e.target.classList.contains('boat')) { dothing(e.target) } })
-
+    //document.addEventListener('touchend', function(e) {   if (e.target.classList.contains('boat')) { dothing(e.target) } })
+    document.addEventListener('click', function(e) {   if (e.target.classList.contains('boat')) { dothing(e.target) } })
+  
 
     $( ".dragboat" ).draggable(
         { "snap": ".seablock",
@@ -193,12 +186,9 @@ $(function() {
                 var h = Math.round(( ah - 2 ) /25)
                 var w = Math.round(( aw - 2) /25)
                 //console.log(ui,event.target,c,r,w,h,aw,ah)
-                event.target.id=`boat_c${c}r${r}w${w}h${h}aw${aw}ah${ah}`  
-                var blob = d3.select(`#${event.target.id}`).datum()
-                blob.dragging = true
-                d3.select(`#${event.target.id}`).datum( blob )
-                //console.log('drag',d3.select(`#${event.target.id}`).datum())
-            }
+                event.target.id=`boat_c${c}r${r}w${w}h${h}aw${aw}ah${ah}`               
+            },
+            "stop": function() {  cantwist = false; console.log('stop drag can twist ',cantwist); }
         }
     );
 
