@@ -117,11 +117,9 @@ Stage: <span id="game_stage">setup</span>
 
 <script>
 
-document.addEventListener('mousedown', function(e) { document.getElementById('output').innerHTML+='md '; console.log(e) })
+//document.addEventListener('mousedown', function(e) { document.getElementById('output').innerHTML+='md '; console.log(e) })
 //document.addEventListener('mouseup', function(e) { document.getElementById('output').innerHTML+='mu '; console.log(e) })
-document.addEventListener('touchstart', function(e) { document.getElementById('output').innerHTML+='ts ' })
-document.addEventListener('touchend', function(e) { document.getElementById('output').innerHTML+='te:'+e.target.className+' '; console.log(e.target.classList.contains('boat')); if (e.target.classList.contains('boat')) { dothing(e.target) } })
-document.addEventListener('mouseup', function(e) { document.getElementById('output').innerHTML+='mu:'+e.target.className+' '; console.log(e.target.classList.contains('boat')); if (e.target.classList.contains('boat')) { dothing(e.target) } })
+//document.addEventListener('touchstart', function(e) { document.getElementById('output').innerHTML+='ts ' })
 //document.addEventListener('mouseup', function(e) { document.getElementById('output').innerHTML+='mu:'+e.target.className+' ' })
 
 $(function() {
@@ -140,13 +138,19 @@ $(function() {
         .on('mouseup', function(d,i) { console.log(d,i,'up',d3.event) })
 
 
-function dothing(target) { 
+    function dothing() { 
         
-        console.log('do thing',target)
+        
+        
+        if (!event.target.classList.contains('boat')) return
+        
+        document.getElementById('output').innerHTML+='dt:'+event.target.classList+' ';
     
         var blob = d3.select(`#${event.target.id}`).datum()
-        console.log(event,event.timeStamp,blob.time,event.timeStamp-blob.time)
-        if (blob.dragging==true | (event.timeStamp-blob.time)>200) return
+        
+        console.log(event.timeStamp-blob.time)
+        
+        if (blob.dragging==true | (event.timeStamp-blob.time)>200 | (event.timeStamp-blob.time)==0) return
         blob.time = event.timeStamp
         
         var text = event.target.id.replace(/[^0-9]/g," ").replace(/\s\s+/g, ' ').trim().split(' ')
@@ -171,6 +175,10 @@ function dothing(target) {
         d3.select(`#${event.target.id}`).datum(blob)
         
     }
+    
+    document.addEventListener('touchend', function(e) {  console.log(e.target.classList.contains('boat')); if (e.target.classList.contains('boat')) { dothing(e.target) } })
+    document.addEventListener('mouseup', function(e) {  console.log(e.target.classList.contains('boat')); if (e.target.classList.contains('boat')) { dothing(e.target) } })
+
 
     $( ".dragboat" ).draggable(
         { "snap": ".seablock",
