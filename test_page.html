@@ -137,16 +137,22 @@ $(function() {
         .style('height', function(d,i) { return `${d.height * 25 + (d.height - 1) * 5 }px` })
         .on('dragstart', drag)
         .on('mousedown', starttouch)
+        .on('mouseup', endtouch)
         .on('touchmove', drag)
         .on('drop', drop)
-        .on('touchend', drop)
+        .on('touchend', endtouch)
         .on('touchstart', starttouch)
-        .on('click', spin)
+        //.on('click', spin)
         
        
     function starttouch(me) {
         me.timeStamp = d3.event.timeStamp
         console.log(me)
+    }
+     
+    function endtouch(me) {
+        if ((me.timeStamp + 200) > d3.event.timeStamp) spin(me)
+        else drop(me)
     }
     
     function drag(me) {  
@@ -170,7 +176,7 @@ $(function() {
         var boat = d3.select('#'+data).datum()
         console.log('drop', me, d3.event.target, boat )
         console.log((boat.timeStamp+300) , d3.event.timeStamp)
-        if ((boat.timeStamp+300) > d3.event.timeStamp) spin(me)
+        //if ((boat.timeStamp+300) > d3.event.timeStamp) spin(me)
         //ev.target.appendChild(document.getElementById(data));   
         //console.log(document.getElementById(data),  ev.target  )     
         document.getElementById(data).style.top = ev.target.style.top        
