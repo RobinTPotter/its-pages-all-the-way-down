@@ -84,7 +84,7 @@ Stage: <span id="game_stage">setup</span>
 <input type="button" value="ping" onclick="ping()">
 <input type="button" value="ready" onclick="ready('robin','95edc0e7-ee7f-48ab-895d-e618f87084c8')">
 </form>
-<div id="output">poo</div>
+<div id="output" style="position:absolute; top:420px; left:30px">poo</div>
 
 
 <script>
@@ -133,6 +133,8 @@ $(function() {
         .attr('class', 'boat dragboat')
         .attr('draggable', 'true')
         .style('position', 'absolute')
+        .style('top', function(d,i) { return `${ 25 * i + 150 }px` })
+        .style('left', 350)
         .style('width', function(d,i) { return `${d.width * 25 + (d.width - 1) * 5 }px` })
         .style('height', function(d,i) { return `${d.height * 25 + (d.height - 1) * 5 }px` })
         .on('dragstart', drag)
@@ -151,6 +153,8 @@ $(function() {
     }
      
     function endtouch(me) {
+    
+        document.getElementById('output').innerHTML+=d3.event.timeStamp+' '
         if ((me.timeStamp + 200) > d3.event.timeStamp) spin(me)
         else drop(me)
     }
@@ -186,7 +190,7 @@ $(function() {
     function spin(me) { 
                 
         //var text = event.target.id.replace(/[^0-9]/g," ").replace(/\s\s+/g, ' ').trim().split(' ')
-        console.log('spin', me,d3.event.target)
+        console.log('spin', me,d3.event.type,d3.event.target)
         document.getElementById('output').innerHTML+='! '
         
         var c = text[0]
