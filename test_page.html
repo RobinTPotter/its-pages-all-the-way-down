@@ -6,237 +6,28 @@
 <meta http-equiv="cache-control" content="no-cache">
 
         <link rel="shortcut icon" href="/static/favicon.ico">
-        <!--
-<link rel="stylesheet" href="/static/lib/bootstrap/css/bootstrap.min.css">
-        <link rel="stylesheet" href="/static/lib/morris/0.5.1/morris.css">
-        -->
-        
-        <title>Welcome to Battleships!</title>
-        
-
-	
         <script src="lib/d3.v4.min.js" charset="utf-8"></script>
-        <script src="lib/jquery-3.4.1.min.js"></script>
-       <!-- <script src="lib/jquery-ui.min.js"></script>
+      <!--  <script src="lib/jquery-3.4.1.min.js"></script>
+        <script src="lib/jquery-ui.min.js"></script>
         <script src="lib/jquery.ui.touch-punch.min.js"></script>  -->
 
-        <style>
-            body {
-                padding: 20px;
-            }
-            @media (max-width: 980px) {
-                body {
-                    padding: 0;
-                }
-            }
-        </style>
+       
+            
 
     </head>
     
     <body style="cursor: auto;">
-        <div>
-		Battleships:
-        <a href="/index">Home</a> |
-        
-        <a href="/logout">Logout</a>
-        
-   
-		</div>
-		
-        <hr>
         
         
-        
+      <script>  
 
+var x='bollocks'.split()
+var things =
+d3.select('body').selectAll('.nob').data(x)
 
-
-<style>
-
-
-table {  border-spacing: 5px; border: none; table-layout: fixed; }
-td, tr { border: none; margin: 0; padding: 0 }
-
-.water { background-color: cyan }
-.miss { background-color: yellow }
-.hit { background-color: red }
-.boat { background-color: grey }
-.ui-draggable-dragging { background-color: green }
-
-</style>
-
-
-Stage: <span id="game_stage">setup</span>
-<span id="whose_turn"></span>
-<div id="myboard" style="display:inherit; position:relative">
-    <h2>robin</h2>
-        <div id="sea"></div>        
-        <div id="boats"></div>
-</div>
-
-<div id="theirboard" style="display:none">
-    <h2 id="opponents_name">no player yet</h2>        
-        <div id="theirsea"></div> 
-     
-</div>
-<br>
-<form>
-<input type="button" value="swap" onclick="swap()">
-<input type="button" value="ping" onclick="ping()">
-<input type="button" value="ready" onclick="ready('robin','95edc0e7-ee7f-48ab-895d-e618f87084c8')">
-</form>
-<div id="output" style="position:absolute; top:420px; left:30px">poo</div>
-
-
-<script>
-
-//document.addEventListener('mousedown', function(e) { document.getElementById('output').innerHTML+='md '; console.log(e) })
-//document.addEventListener('mouseup', function(e) { document.getElementById('output').innerHTML+='mu '; console.log(e) })
-//document.addEventListener('touchstart', function(e) { document.getElementById('output').innerHTML+='ts ' })
-//document.addEventListener('mouseup', function(e) { document.getElementById('output').innerHTML+='mu:'+e.target.className+' ' })
-
-
-
-
-$(function() {
-
-
-
-    var boats_data = [{'length': 5, 'name': 'carrier', 'r': -1, 'c': -1, 'x': -1, 'y': -1, 'horizontal': 1, 'width': 5, 'height': 1}, {'length': 4, 'name': 'battleship', 'r': -1, 'c': -1, 'x': -1, 'y': -1, 'horizontal': 1, 'width': 4, 'height': 1}, {'length': 3, 'name': 'submarine', 'r': -1, 'c': -1, 'x': -1, 'y': -1, 'horizontal': 1, 'width': 3, 'height': 1}, {'length': 3, 'name': 'cruiser', 'r': -1, 'c': -1, 'x': -1, 'y': -1, 'horizontal': 1, 'width': 3, 'height': 1}, {'length': 2, 'name': 'destroyer', 'r': -1, 'c': -1, 'x': -1, 'y': -1, 'horizontal': 1, 'width': 2, 'height': 1}]
-    
-    var sea_data = []
-    for (var rr=1;rr<11;rr++) {
-        for (var cc=1;cc<11;cc++) {
-            sea_data.push({ "name": `you_c${cc}r${rr}`, "c":cc, "r":rr, "type": "water"})
-        }
-    }
-    console.log(sea_data)
-    
-    var sea = d3.select('#sea').selectAll('.sea').data(sea_data)
-    var seaEnter = sea.enter().append('div')
-    
-    seaEnter.attr('id', function(d,i) { return d.name })
-        .attr('class', function(d,i) { return d.type })
-        .style('position', 'absolute' )
-        .style('top', function(d,i) { return d.r*(25+5) } )
-        .style('left', function(d,i) { return d.c*(25+5) } )
-        .style('width', 25 )
-        .style('height', 25 )
-        .text(function(d,i) { return d.id})
-        .on('drop', drop )
-        .on('dragover', allowdrop )
-    
-    
-    var boat = d3.select('#boats').selectAll('.boat').data(boats_data)
-    var boatEnter = boat.enter().append('div')
-    
-    boatEnter.attr('id', function(d,i) { return `${d.name}` })
-        .attr('class', 'boat dragboat')
-        .attr('draggable', 'true')
-        .style('position', 'absolute')
-        .style('top', function(d,i) { return `${ 25 * i + 150 }px` })
-        .style('left', 350)
-        .style('width', function(d,i) { return `${d.width * 25 + (d.width - 1) * 5 }px` })
-        .style('height', function(d,i) { return `${d.height * 25 + (d.height - 1) * 5 }px` })
-        .on('dragstart', drag)
-        .on('mousedown', starttouch)
-        .on('mouseup', endtouch)
-        .on('touchmove', drag)
-        .on('drop', drop)
-        .on('touchend', endtouch)
-        .on('touchstart', starttouch)
-        //.on('click', spin)
-        
-       
-    function starttouch(me) {
-        me.timeStamp = d3.event.timeStamp
-        console.log(me)
-    }
-     
-    function endtouch(me) {
-        if (me.timeStamp == d3.event.timeStamp) return
-        document.getElementById('output').innerHTML+=d3.event.timeStamp+' '
-        if ((me.timeStamp + 200) > d3.event.timeStamp) spin(me)
-        else drop(me)
-    }
-    
-    function drag(me) {  
-        console.log('drag', me,d3.event.target)
-        console.log('drag start', d3.event)  
-        d3.event.dataTransfer.setData("text", d3.event.target.id);
-    }
-    
-    function allowdrop(me) {
-        console.log('allowdrop', me,d3.event.target)
-        ev = d3.event
-        ev.preventDefault();
-        
-    }
-    
-    function drop(me) {
-    
-        ev = d3.event
-        ev.preventDefault();
-        var data = ev.dataTransfer.getData("text");
-        var boat = d3.select('#'+data).datum()
-        console.log('drop', me, d3.event.target, boat )
-        console.log((boat.timeStamp+300) , d3.event.timeStamp)
-        //if ((boat.timeStamp+300) > d3.event.timeStamp) spin(me)
-        //ev.target.appendChild(document.getElementById(data));   
-        //console.log(document.getElementById(data),  ev.target  )     
-        document.getElementById(data).style.top = ev.target.style.top        
-        document.getElementById(data).style.left = ev.target.style.left        
-    }
-    
-    function spin(me) { 
-                
-        //var text = event.target.id.replace(/[^0-9]/g," ").replace(/\s\s+/g, ' ').trim().split(' ')
-        console.log('spin', me,d3.event.type,d3.event.target)
-        document.getElementById('output').innerHTML+='! '
-        
-        var c = text[0]
-        var r = text[1]
-        var w = text[2]
-        var h = text[3]
-        var aw = text[4]
-        var ah = text[5]
-   
-        console.log(c,r,w,h,aw,ah)
-   
-        //rotate
-        event.target.style.height = aw+'px'
-        event.target.style.width = ah+'px'
-   
-        //account for rotation danger, these are swapped
-        //event.target.id=`boat_c${c}r${r}w${h}h${w}aw${ah}ah${aw}`
-        //console.log('twisted')
-    }
-   // 
-   //
-   // $( ".dragboat" ).draggable(
-   //     { "snap": ".seablock",
-   //         "snapMode": "inner",
-   //         "containment": "table.sea",
-   //         "drag": function(event,ui) {
-   //             var p = $('#seabed').position()
-   //             var r = Math.round((ui.offset.top - p.top) / 25) + 1
-   //             var c = Math.round((ui.offset.left - p.left) / 25) + 1
-   //             var ah = Number(event.target.style.height.replace(/[^0-9]*/g,''))
-   //             var aw = Number(event.target.style.width.replace(/[^0-9]*/g,''))
-   //             var h = Math.round(( ah - 2 ) /25)
-   //             var w = Math.round(( aw - 2) /25)
-   //             //console.log(ui,event.target,c,r,w,h,aw,ah)
-   //             event.target.id=`boat_c${c}r${r}w${w}h${h}aw${aw}ah${ah}`               
-   //         },
-   //         "stop": function() {  cantwist = false; console.log('stop drag can twist ',cantwist); }
-   //     }
-   // );
-   //
-   //
-   // //$( ".dragboat" ).doubletap(function() { alert('taptap')})
-   // $( ".boat" ).bind('mouseup touchend', dothing)
-    
-});
-
+things.enter().append('div')
+    .class('nob')
+     .text(function(d) {return d})
 
 </script>
 
