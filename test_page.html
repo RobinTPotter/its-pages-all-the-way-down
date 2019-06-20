@@ -21,13 +21,10 @@
         
       <script>  
 
-var x='bollocks'.split()
-var things =
-d3.select('body').selectAll('.nob').data(x)
+var x='bollocks'.split('')
+var things = d3.select('body').selectAll('.nob').data(x).enter().append('div').attr('class','nob').text(function(d) { return d })
 
-things.enter().append('div')
-    .class('nob')
-     .text(function(d) {return d})
+
 
 </script>
 
