@@ -96,8 +96,7 @@
             cat.setAttribute('height','100%')
             catbox.appendChild(cat)
             deets.appendChild(catbox)
-            
-            
+                        
             hello.id = (new Date).getTime()
             hello.setAttribute('transform','translate('+((spacing_x+1000)*(pos % num_cards))+' '+((spacing_y+1410)*Math.floor(pos/num_cards))+')');
             console.log(hello)
