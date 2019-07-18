@@ -140,6 +140,8 @@
         //count of cards printed
         card_count=0
 
+        v = []
+        
         //get the page number from parameter
         if (window.location.search) {
             re = /\?page=(\d+)/;
@@ -152,7 +154,6 @@
             for (var nn=0;nn<8;nn++) v.push(String(nn))
         }
         
-        v = []
         for (var nn=0;nn<60;nn++) v.push(String(nn))
 
         //print cards only to fill page

@@ -1,0 +1,149 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 744.0945 1052.3622">
+    <defs>
+        <path id="cross" d="M -20 -20 L 0 0 M 20 -20 L -20 20" style="fill:none;stroke:#000;stroke-width:2"></path>
+    </defs>
+
+
+    <g id="card">
+        <g>           
+                <rect x="0" y="0" width="1000" height="1410" style="fill:none;stroke:#000;stroke-width:2"></rect>
+            <g class="deets">
+            </g>
+        </g>
+    </g>
+
+    <g id="main_panel" transform="scale(1.0)">
+        <g id="deck">
+        </g>
+        
+    </g>
+
+    <script id="main_script" type="text/javascript"><![CDATA[
+
+        ///twitch();
+
+
+        // main parameters
+        // main_scale should be adjusted according to paper size
+        // print preview and rough test print a very important
+        var spacing_x = 60
+        var spacing_y = 60        
+        var num_cards = 3
+        var main_scale = 0.90
+        
+        var pos = 0
+        var cards_per_page = num_cards * num_cards
+        
+        var deck_offset_x = spacing_x / 2
+        var deck_offset_y = spacing_y / 2
+        var deck_scale = 1 / (num_cards+1)
+        
+        var deck = document.getElementById('deck')
+        deck.setAttribute('transform','scale('+deck_scale+') translate('+deck_offset_x+' '+deck_offset_y+')')
+        
+        var main_panel = document.getElementById('main_panel')
+        main_panel.setAttribute('transform','scale('+main_scale+')')
+        
+        var ns = 'http://www.w3.org/2000/svg'
+        
+        for (var ll=0;ll<num_cards;ll++) {
+        
+            var vline = document.createElementNS(ns, 'line')   
+            vline.setAttribute('id', 'vline'+ll)
+            vline.setAttribute('x1', (ll+1)*(1000 + spacing_x) - spacing_x/2)
+            vline.setAttribute('x2', (ll+1)*(1000 + spacing_x) - spacing_x/2)
+            vline.setAttribute('y1','0')
+            vline.setAttribute('y2',(1410 + spacing_y/2)* num_cards + deck_offset_y/2 )
+            vline.setAttribute('style','stroke:#000;stroke-width:1;stroke-linecap:round;stroke-dasharray:10,100;fill:none')
+            deck.appendChild(vline)
+
+            var hline = document.createElementNS(ns, 'line')   
+            vline.setAttribute('id', 'hline'+ll)  
+            hline.setAttribute('y1', (ll+1)*(1410 + spacing_y) - spacing_y/2)
+            hline.setAttribute('y2', (ll+1)*(1410 + spacing_y) - spacing_y/2)
+            hline.setAttribute('x1','0')
+            hline.setAttribute('x2',(1000 + spacing_x/2)* num_cards  + deck_offset_x/2  )
+            hline.setAttribute('style','stroke:#000;stroke-width:1;stroke-linecap:round;stroke-dasharray:10,100;fill:none')
+            deck.appendChild(hline)
+            
+        }
+        
+        //main card object (deleted at end of script) 
+
+        //change main card and clone and put in deck group
+        function createcard() {
+            //suit(pattern)
+            //value(val)
+            
+            
+            var xmlns = "http://www.w3.org/2000/svg"
+            
+            var card = document.getElementById('card')
+            card.style.visibility = 'visible'
+            var hello = card.cloneNode(true)
+
+            //custom code here
+            
+            var deets = document.getElementsByClassName('deets')[0]
+            deets.setAttribute('id',`deets_${card_count}`)
+            while (deets.firstChild) deets.removeChild(deets.firstChild)
+            
+            var catbox = document.createElementNS(xmlns, 'g')
+            catbox.setAttribute('transform',`rotate(${ 3 * card_count })`)
+            var cat = document.createElementNS(xmlns, 'image')
+            cat.setAttribute('xlink:href','ivy.png')
+            cat.setAttribute('width','100%')
+            cat.setAttribute('height','100%')
+            catbox.appendChild(cat)
+            deets.appendChild(catbox)
+            
+            
+            hello.id = (new Date).getTime()
+            hello.setAttribute('transform','translate('+((spacing_x+1000)*(pos % num_cards))+' '+((spacing_y+1410)*Math.floor(pos/num_cards))+')');
+            console.log(hello)
+            var deck = document.getElementById('deck')
+            deck.appendChild(hello)
+            card.style.visibility = 'hidden'
+            pos++
+            
+        }
+
+        // page number unless comes from parameter
+        page_number=0
+
+        //count of cards printed
+        card_count=0
+    
+        var v = []
+            
+        //get the page number from parameter
+        if (window.location.search) {
+            re = /\?page=(\d+)/;
+            page_number =Number( window.location.search.match(re)[1] )
+            //alert(page_number)
+        } else {
+            // no page number, run test page    
+            //all numbers and extra each suit
+            for (var nn=0;nn<28;nn++) v.push(String(nn))
+        }
+
+        //print cards only to fill page
+        for (var vv=0;vv<v.length;vv++) {
+            if (card_count>=page_number*cards_per_page && card_count<(page_number+1)*cards_per_page) createcard()
+            card_count++
+        }
+        
+
+        document.getElementsByTagName('svg')[0].removeChild(document.getElementById('card'))
+        console.log(document.getElementsByTagName('svg')[0])
+
+    ]]>
+    </script>
+    <script type="text/javascript">
+    <![CDATA[
+        document.getElementsByTagName('svg')[0].removeChild(document.getElementById('main_script'))
+    ]]>
+    </script>
+    
+    
+</svg>
