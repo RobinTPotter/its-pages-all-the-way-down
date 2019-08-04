@@ -23,7 +23,7 @@
 
 var x='bollocks'.split('')
 var things = d3.select('body').selectAll('.nob').data(x).enter().append('span').attr('class','nob').text(function(d) { return d })
-things.transition().delay(function(d,i) { return 500*i }).style('text-size', 50).transition().style('text-size',12)
+things.transition().delay(function(d,i) { return 500*i }).style('font-size', 50).transition().style('font-size',12)
 
 
 </script>
