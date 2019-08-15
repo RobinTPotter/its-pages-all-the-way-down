@@ -1,35 +1,48 @@
-<html lang="en"><head>
+<html lang="en">
+    <head>
         <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        
-<meta http-equiv="cache-control" content="max-age=0">
-<meta http-equiv="cache-control" content="no-cache">
-
+        <meta name="viewport" content="width=device-width, initial-scale=1">        
+        <meta http-equiv="cache-control" content="max-age=0">
+        <meta http-equiv="cache-control" content="no-cache">
         <link rel="shortcut icon" href="/static/favicon.ico">
         <script src="lib/d3.v4.min.js" charset="utf-8"></script>
-      <!--  <script src="lib/jquery-3.4.1.min.js"></script>
-        <script src="lib/jquery-ui.min.js"></script>
-        <script src="lib/jquery.ui.touch-punch.min.js"></script>  -->
-
-       
-            
-
-    </head>
-    
-    <body style="cursor: auto;">
-        
-        
-      <script>  
-
-var x='bollocks'.split('')
-var things = d3.select('body').selectAll('.nob').data(x).enter().append('span').attr('class','nob').text(function(d) { return d })
-things.transition().delay(function(d,i) { return 500*i }).style('font-size', 50).transition().style('font-size',12)
-
-
-</script>
-
-    
-    
-    
-    
-</body></html>
+        <style>
+            table {
+                border-collapse: collapse;
+            }
+            td {
+                vertical-align: middle;
+                text-align: center;
+                padding: 0px
+            }
+        </style>
+    </head>    
+    <body style="cursor: auto;">        
+        <script>
+            var x='bollocks'.split('')
+            var things = d3.select('body')
+                .append('table')
+                .append('tr')
+                .selectAll('.nob')
+                .data(x)
+                .enter()
+                .append('td')
+                .style('width', '25px')
+                .style('height', '60px')
+                .append('span')
+                .style('font-size',"30px")
+                .style('color','black')
+                .attr('class','nob')
+                .text(function(d) { return d })
+                
+            things
+                .transition()
+                .delay(function(d,i) { return 100*i })
+                .style('font-size', "50px")
+                .style('color','yellow')
+                .transition()
+                .style('font-size',"30px")
+                .style('color','black')
+        </script>   
+    </body>
+</html>
