@@ -1,0 +1,27 @@
+<html>
+    <body onload="dothis()">
+        <h1 id="message" style="font-family: sans-serif; text-align:center">On Phone</h1>
+        <script>
+      
+            var cl = ['blue','black','green']
+            var cli = 0
+            var m
+            var timing = 500
+
+            function tick() {
+                cli++
+                if (cli>=cl.length) cli=0
+                m.style.color = cl[cli]
+                setTimeout(tick, timing)
+            }
+            
+            function dothis() {
+                m = document.getElementById('message')
+                if (window.location.search) m.textContent = decodeURI(window.location.search).slice(1)
+                m.style.fontSize =  2 * (document.body.clientWidth / m.textContent.length) * 0.95
+                tick()
+            }
+
+        </script>
+    </body>
+</html>
