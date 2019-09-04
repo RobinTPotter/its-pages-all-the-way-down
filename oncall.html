@@ -21,7 +21,7 @@
                 if (window.location.search) m.textContent = decodeURI(window.location.search).slice(1)
                 var new_size =  2 * (document.body.clientWidth / m.textContent.length) * 0.95
                 console.log('new size', new_size)
-                m.style.fontSize = new_size
+                m.style.fontSize = `${Math.round(new_size)}px`
                 tick()
             }
 
