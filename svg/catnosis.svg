@@ -1,0 +1,120 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 744.0945 1052.3622">
+
+    <defs>
+        <path id="cross" d="M -20 -20 L 0 0 M 20 -20 L -20 20" style="fill:none;stroke:#000;stroke-width:2"></path>
+        <image id="cat_image" xlink:href="ivy.png" width="100%" height="100%"/>
+        <clipPath id="testing">
+            <rect x="0" y="0" width="1000" height="1410"></rect>
+        </clipPath>
+    </defs>
+
+    <g id="card" transform="scale(0.745)" clip-path="url(#testing)">
+        <rect x="0" y="0" width="1000" height="1410" style="fill:none;stroke:#000;stroke-width:2"></rect>
+           
+    </g>
+    
+    <script id="main_script" type="text/javascript"><![CDATA[
+            
+        function make_cat(x,y,angle,size) {
+            var card = document.getElementById('card')
+            var card_count = 4
+            var xmlns = 'http://www.w3.org/2000/svg'
+            var xlinkns = 'http://www.w3.org/1999/xlink'
+            var catbox_outer = document.createElementNS(xmlns, 'g')
+            catbox_outer.setAttributeNS(null,'transform',`translate( ${x} ${y}) scale(${size})`)
+            var catbox = document.createElementNS(xmlns, 'g')
+            catbox.setAttributeNS(null,'transform',`rotate(${angle}) translate( -370 -525) `)
+            var cat = document.createElementNS(xmlns, 'image')
+            cat.setAttributeNS(xlinkns,'href',`ivy.png?nobby=${card_count}`);
+            cat.setAttributeNS(null, 'width','100%')
+            cat.setAttributeNS(null, 'height','100%')
+            cat.setAttributeNS(null, 'x',`${ 0 }`)
+            cat.setAttributeNS(null, 'y',`${ 0 }`)
+            var name = `${x}_${y}_${angle}_${size}`
+            catbox.setAttributeNS(null, 'id', name)
+            console.log(name)
+            catbox_outer.appendChild(catbox)
+            catbox.appendChild(cat)    
+            card.appendChild(catbox_outer)
+            var anTr = document.createElementNS(xmlns, 'animateTransform')            
+            anTr.setAttributeNS(null,'href', `#${name}`)            
+            anTr.setAttributeNS(null,'attributeName','transform' )
+            anTr.setAttributeNS(null,'attributeType','XML')
+            anTr.setAttributeNS(null,'type','rotate')
+            anTr.setAttributeNS(null,'from','0 75 75')
+            anTr.setAttributeNS(null,'to','360 75 75' )
+            anTr.setAttributeNS(null,'dur','2s')
+            anTr.setAttributeNS(null,'begin','0s')
+            anTr.setAttributeNS(null,'repeatCount','indefinite')
+            anTr.setAttributeNS(null,'fill','freeze')
+            
+            
+            
+            
+            card.appendChild(anTr)
+            
+        }
+
+        var page_number
+        
+        if (window.location.search) {
+            re = /\?page=(\d+)/;
+            match = window.location.search.match(re) 
+            if (match) {
+                page_number = Number(match[1])
+            }
+        }
+        
+        if (page_number) {                     
+            if (page_number==1) { 
+                
+                var min_cats=-150, max_cats=340, cats_inc=2
+                var cat_x_offset=280, cat_y_offset=260
+                var cat_x_angle_div=12, cat_y_angle_div=20
+                var cats_angle = 4
+            
+                for (var ii=min_cats;ii<max_cats;ii+=cats_inc) {
+                    xx = (cat_x_offset+ii/2)*Math.cos(ii/cat_x_angle_div)
+                    yy = (cat_y_offset+ii/2)*Math.sin(ii/cat_y_angle_div)
+                    make_cat(370+140+xx,700+yy,ii*cats_angle,0.2)
+                }            
+            } else if (page_number==2) { 
+                
+                var min_cats=-450, max_cats=740, cats_inc=4
+                var cat_x_offset=280, cat_y_offset=260
+                var cat_x_angle_div=12, cat_y_angle_div=20
+                var cats_angle = 4.5
+            
+                for (var ii=min_cats;ii<max_cats;ii+=cats_inc) {
+                    xx = (cat_x_offset+ii/2)*Math.cos(ii/cat_x_angle_div)
+                    yy = (cat_y_offset+ii/2)*Math.sin(ii/cat_y_angle_div)
+                    make_cat(370+140+xx,700+yy,ii*cats_angle,4*Math.pow(0.5*ii/(max_cats-min_cats),2))
+                    
+                }            
+            }            
+        } else {
+            make_cat(370+130,700,0,1.3)       
+        }   
+        
+       
+        
+    ]]>
+    </script>   
+</svg>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
