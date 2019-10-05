@@ -105,7 +105,7 @@ if (spin) {
             make_cat(370+130,700,0,1.3, false)       
    
 var anTr = document.createElementNS(xmlns, 'animateTransform')            
-            anTr.setAttributeNS(null,'href', 'card')            
+            anTr.setAttributeNS(null,'href', '#card')            
             anTr.setAttributeNS(null,'attributeName','transform' )
             anTr.setAttributeNS(null,'attributeType','XML')
             anTr.setAttributeNS(null,'type','rotate')
