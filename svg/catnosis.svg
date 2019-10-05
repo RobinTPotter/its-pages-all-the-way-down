@@ -94,6 +94,12 @@
                 }      
 
 
+
+      
+            }            
+        } else {
+            make_cat(370+130,700,0,1.3)       
+   
 var anTr = document.createElementNS(xmlns, 'animateTransform')            
             anTr.setAttributeNS(null,'href', 'card')            
             anTr.setAttributeNS(null,'attributeName','transform' )
@@ -105,13 +111,7 @@ var anTr = document.createElementNS(xmlns, 'animateTransform')
             anTr.setAttributeNS(null,'begin','0s')
             anTr.setAttributeNS(null,'repeatCount','indefinite')
             anTr.setAttributeNS(null,'fill','freeze')
-
-
-      
-            }            
-        } else {
-            make_cat(370+130,700,0,1.3)       
-        }   
+     }   
         
        
         
