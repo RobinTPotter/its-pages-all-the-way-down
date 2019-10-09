@@ -65,7 +65,7 @@
         var page_number
 
         if (window.location.search) {
-            re = /\?page=(\d+)/;
+            re = /\?page=(\d+)[&]*/;
             match = window.location.search.match(re)
             if (match) {
                 page_number = Number(match[1])
