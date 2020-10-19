@@ -6,43 +6,38 @@
         <meta http-equiv="cache-control" content="no-cache">
         <link rel="shortcut icon" href="/static/favicon.ico">
         <script src="lib/d3.v4.min.js" charset="utf-8"></script>
-        <style>
-            table {
-                border-collapse: collapse;
-            }
-            td {
-                vertical-align: middle;
-                text-align: center;
-                padding: 0px;
-                width: 32px;
-                height: 60px
-            }
-        </style>
+        <script src="lib/raphael.js" charset="utf-8"></script>
+        <script src="lib/flowchart.js" charset="utf-8"></script>
     </head>    
-    <body style="cursor: auto;">        
-        <script>
-            var x='bollocks'.split('')
-            var things = d3.select('body')
-                .append('table')
-                .append('tr')
-                .selectAll('.nob')
-                .data(x)
-                .enter()
-                .append('td')
-                .append('span')
-                .style('font-size',"30px")
-                .style('color','black')
-                .attr('class','nob')
-                .text(function(d) { return d })
-                
-            things
-                .transition()
-                .delay(function(d,i) { return 100*i })
-                .style('font-size', "50px")
-                .style('color','yellow')
-                .transition()
-                .style('font-size',"30px")
-                .style('color','black')
+    <body style="cursor: auto;">   
+        <div id="diagram"></div>     
+        <script>    
+        
+            //var stuff = ""
+            //stuff+="st=>start: Hello\n"
+            //stuff+="e=>end: Bye\n"                
+            //stuff+="st->e\n"
+            //var diagram = flowchart.parse(stuff)
+           
+            var stuff=[''
+            ,'st=>start: Domino\'s'
+            ,'ch1=>parallel: Changes in Customers'
+            ,'ch2=>operation: Change of Details'
+            ,'ch3=>operation: New Customers'
+            ,'e1=>inputoutput: Experian STS'
+            ,'e2=>operation: Experian AutoCoder Service'
+            ,'e3=>operation: Experian iCoder Online'
+            
+            ,'st->ch1'
+            ,'ch1->ch2'
+            ,'ch1->ch3'
+            ,'ch2->e1'
+            ,'ch3->e1'
+            ]
+           
+            var diagram = flowchart.parse(stuff.join('\n'))
+            diagram.drawSVG('diagram')
+            
         </script>   
     </body>
 </html>

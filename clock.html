@@ -14,7 +14,7 @@
             <path d="M0,0 l0,-15" style="stroke:#f66;stroke-width:2px"></path>
             </g>
             <g>
-            <text id="tz" class="tz" x="0" y="35" text-anchor="middle" style="font-family:sans-serif;font-size:5px">TZ</text>
+            <text id="tz" class="tz" x="0" y="30" text-anchor="middle" style="font-family:sans-serif;font-size:5px">TZ</text>
             </g>
         </g>
     </svg>
@@ -34,7 +34,7 @@
             <path d="M0,0 l0,-15" style="stroke:#f66;stroke-width:2px"></path>
             </g>
             <g>
-            <text id="tz" class="tz" x="0" y="35" text-anchor="middle" style="font-family:sans-serif;font-size:5px">TZ</text>
+            <text id="tz" class="tz" x="0" y="30" text-anchor="middle" style="font-family:sans-serif;font-size:5px">TZ</text>
             </g>
         </g>
     </svg>
@@ -55,7 +55,7 @@
             <path d="M0,0 l0,-15" style="stroke:#f66;stroke-width:2px"></path>
             </g>
             <g>
-            <text id="tz" class="tz" x="0" y="35" text-anchor="middle" style="font-family:sans-serif;font-size:5px">TZ</text>
+            <text id="tz" class="tz" x="0" y="30" text-anchor="middle" style="font-family:sans-serif;font-size:5px">TZ</text>
             </g>
         </g>
     </svg>
@@ -64,7 +64,7 @@
 
 <script>
 
-    function update_clock_called(clock, tzd) {
+    function update_clock_called(clock, tzd, alt) {
 
         var hr = document.getElementById(clock).getElementsByClassName('hr')[0]
         var min = document.getElementById(clock).getElementsByClassName('min')[0]
@@ -92,17 +92,17 @@
         
         var tz = document.getElementById(clock).getElementsByClassName('tz')[0]
         
-        tz.innerHTML = tzd
+        tz.innerHTML = alt==undefined?tzd:alt
         
         setTimeout(function() {
-        update_clock_called(clock, tzd)
+        update_clock_called(clock, tzd, alt)
         }, 500)
     
     }
     
-    update_clock_called('clock', 'Asia/Kolkata')
+    update_clock_called('clock', 'Asia/Kolkata', 'Pavan')
     update_clock_called('clock2', 'Europe/London')
-    update_clock_called('clock3', 'Asia/Kuala_Lumpur')
+    update_clock_called('clock3', 'Asia/Kuala_Lumpur', 'Hafiz')
     
 </script>
 </html>
