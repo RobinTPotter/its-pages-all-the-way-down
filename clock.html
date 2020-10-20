@@ -104,12 +104,29 @@
     
     }
     
-    create_clock_called('clock')
-    create_clock_called('clock2')
-    create_clock_called('clock3')
-    update_clock_called('clock', 'Asia/Kolkata', 'Pavan')
-    update_clock_called('clock2', 'Europe/London')
-    update_clock_called('clock3', 'Asia/Kuala_Lumpur', 'Hafiz')
+    if (window.location.search) {
+    
+        console.log(window.location.search)
+        re = /[A-Za-z]*:[A-Za-z\/_]*/g;
+        match = window.location.search.match(re)
+        console.log(match)
+        var n = 1
+        match.forEach(function(m) {
+            var d = m.split(':')
+            var nn= d[0], t=d[1]
+            var cl = 'clock'+String(n)
+            n++
+            if (nn=='') nn=undefined
+            create_clock_called(cl)
+            update_clock_called(cl, t, nn)   
+            
+        })
+    
+    } else {
+        create_clock_called('clock')
+        update_clock_called('clock', 'Europe/London')    
+    }
+    
     
 </script>
 </body>
