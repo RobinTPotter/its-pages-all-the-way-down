@@ -1,68 +1,72 @@
 <html>
-<div style="width:120px;height:150px">
-    <svg id="clock" viewBox="-25 -25 50 60">
-            <g>
-            <circle x="0" y="0" r="23" style="stroke:#000;stroke-width:0.5px;fill:#eff"></circle>
-            </g>
-            <g id="sec" class="sec" transform="rotate(0)">
-            <path d="M0,0 l0,-20" style="stroke:#6f6;stroke-width:2px"></path>
-            </g>
-            <g id="min" class="min" transform="rotate(0)">
-            <path d="M0,0 l0,-20" style="stroke:#66f;stroke-width:2px"></path>
-            </g>
-            <g id="hr" class="hr" transform="rotate(0)">
-            <path d="M0,0 l0,-15" style="stroke:#f66;stroke-width:2px"></path>
-            </g>
-            <g>
-            <text id="tz" class="tz" x="0" y="30" text-anchor="middle" style="font-family:sans-serif;font-size:5px">TZ</text>
-            </g>
-        </g>
-    </svg>
-</div>
-<div style="width:120px;height:150px">
-    <svg id="clock2" viewBox="-25 -25 50 60">
-            <g>
-            <circle x="0" y="0" r="23" style="stroke:#000;stroke-width:0.5px;fill:#eff"></circle>
-            </g>
-            <g id="sec" class="sec" transform="rotate(0)">
-            <path d="M0,0 l0,-20" style="stroke:#6f6;stroke-width:2px"></path>
-            </g>
-            <g id="min" class="min" transform="rotate(0)">
-            <path d="M0,0 l0,-20" style="stroke:#66f;stroke-width:2px"></path>
-            </g>
-            <g id="hr" class="hr" transform="rotate(0)">
-            <path d="M0,0 l0,-15" style="stroke:#f66;stroke-width:2px"></path>
-            </g>
-            <g>
-            <text id="tz" class="tz" x="0" y="30" text-anchor="middle" style="font-family:sans-serif;font-size:5px">TZ</text>
-            </g>
-        </g>
-    </svg>
-</div>
-
-<div style="width:120px;height:150px">
-    <svg id="clock3" viewBox="-25 -25 50 60">
-            <g>
-            <circle x="0" y="0" r="23" style="stroke:#000;stroke-width:0.5px;fill:#eff"></circle>
-            </g>
-            <g id="sec" class="sec" transform="rotate(0)">
-            <path d="M0,0 l0,-20" style="stroke:#6f6;stroke-width:2px"></path>
-            </g>
-            <g id="min" class="min" transform="rotate(0)">
-            <path d="M0,0 l0,-20" style="stroke:#66f;stroke-width:2px"></path>
-            </g>
-            <g id="hr" class="hr" transform="rotate(0)">
-            <path d="M0,0 l0,-15" style="stroke:#f66;stroke-width:2px"></path>
-            </g>
-            <g>
-            <text id="tz" class="tz" x="0" y="30" text-anchor="middle" style="font-family:sans-serif;font-size:5px">TZ</text>
-            </g>
-        </g>
-    </svg>
-</div>
-
-
+<body>
 <script>
+
+    var NS = 'http://www.w3.org/2000/svg'
+
+    function create_clock_called(clock) {
+    
+        var div = document.createElement('div')
+        div.setAttribute('style','width:120px;height:150px')
+        var svg = document.createElementNS(NS,'svg')
+        svg.id = clock
+        svg.setAttribute('viewBox','-25 -25 50 60')
+        
+        var gc = document.createElementNS(NS,'g')
+        var circle = document.createElementNS(NS,'circle')
+        circle.setAttribute('x', '0')
+        circle.setAttribute('y', '0')
+        circle.setAttribute('r', '23')
+        circle.setAttribute('style', 'stroke:#000;stroke-width:0.5px;fill:#eff')
+        gc.appendChild(circle)
+        
+        var gs = document.createElementNS(NS,'g')
+        gs.id = 'sec'
+        gs.classList.add('sec')
+        gs.setAttribute('transform','rotate(0)')
+        var sh = document.createElementNS(NS,'path')
+        sh.setAttribute('d', 'M0,0 l0,-20')
+        sh.setAttribute('style','stroke:#6f6;stroke-width:2px')
+        gs.appendChild(sh)
+        
+        var gm = document.createElementNS(NS,'g')
+        gm.id = 'min'
+        gm.classList.add('min')
+        gm.setAttribute('transform','rotate(0)')
+        var mh = document.createElementNS(NS,'path')
+        mh.setAttribute('d', 'M0,0 l0,-20')
+        mh.setAttribute('style','stroke:#66f;stroke-width:2px')
+        gm.appendChild(mh)             
+        
+        var gh = document.createElementNS(NS,'g')
+        gh.id = 'hr'
+        gh.classList.add('hr')
+        gh.setAttribute('transform','rotate(0)')
+        var hh = document.createElementNS(NS,'path')
+        hh.setAttribute('d', 'M0,0 l0,-15')
+        hh.setAttribute('style','stroke:#f66;stroke-width:2px')
+        gh.appendChild(hh)            
+        
+        var gt = document.createElementNS(NS,'g')
+        var text = document.createElementNS(NS,'text')
+        text.id='tz'
+        text.classList.add('tz')
+        text.setAttribute('x','0')
+        text.setAttribute('y','30')
+        text.setAttribute('text-anchor','middle')
+        text.setAttribute('style','font-family:sans-serif;font-size:5px')
+        text.innerHTML = 'TZ'
+        gt.appendChild(text)       
+        
+        svg.appendChild(gc)
+        svg.appendChild(gs)
+        svg.appendChild(gm)
+        svg.appendChild(gh)
+        svg.appendChild(gt)
+        div.appendChild(svg)
+        document.body.appendChild(div)   
+        
+    }
 
     function update_clock_called(clock, tzd, alt) {
 
@@ -85,7 +89,7 @@
         
         var d = new Date(formatter.format(new Date()))    
         
-        //var d = (new Date()) //default
+        //if (tzd=='Europe/London') d.setHours(d.getHours()+1)
         hr.setAttribute('transform', `rotate(${360*(d.getHours()%12)/12})`)
         min.setAttribute('transform', `rotate(${360*d.getMinutes()/60})`)
         sec.setAttribute('transform', `rotate(${360*d.getSeconds()/60})`)
@@ -100,9 +104,13 @@
     
     }
     
+    create_clock_called('clock')
+    create_clock_called('clock2')
+    create_clock_called('clock3')
     update_clock_called('clock', 'Asia/Kolkata', 'Pavan')
     update_clock_called('clock2', 'Europe/London')
     update_clock_called('clock3', 'Asia/Kuala_Lumpur', 'Hafiz')
     
 </script>
+</body>
 </html>
