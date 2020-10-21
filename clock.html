@@ -4,10 +4,16 @@
 
     var NS = 'http://www.w3.org/2000/svg'
 
-    function create_clock_called(clock) {
+    function create_clock_called(clock, num) {
+    
+    console.log(clock, num)
+    
+        var width = document.body.clientWidth / num
+        var height = width * 3/2.5
+        
     
         var div = document.createElement('div')
-        div.setAttribute('style','width:120px;height:150px')
+        div.setAttribute('style',`float:left;width:${width};height:${height}`)
         var svg = document.createElementNS(NS,'svg')
         svg.id = clock
         svg.setAttribute('viewBox','-25 -25 50 60')
@@ -90,9 +96,15 @@
         var d = new Date(formatter.format(new Date()))    
         
         //if (tzd=='Europe/London') d.setHours(d.getHours()+1)
-        hr.setAttribute('transform', `rotate(${360*(d.getHours()%12)/12})`)
+        //hr.setAttribute('transform', `rotate(${360*((d.getHours()%12)/12)+d.getMinutes()/60})`)
+        hr.setAttribute('transform', `rotate(${360*(((d.getHours()+d.getMinutes()/60)%12)/12)})`)
         min.setAttribute('transform', `rotate(${360*d.getMinutes()/60})`)
         sec.setAttribute('transform', `rotate(${360*d.getSeconds()/60})`)
+        
+        var face = document.getElementById(clock).getElementsByTagName('circle')[0]
+        var r=0,g=0,b=0
+        var val = 255 - 255 * Math.pow((Math.abs(( d.getHours() - 12 )) / 12),0.9)
+        face.style.fill = "#" + ((1 << 24) + (val << 16) + (val << 8) + 100).toString(16).slice(1);
         
         var tz = document.getElementById(clock).getElementsByClassName('tz')[0]
         
@@ -117,9 +129,8 @@
             var cl = 'clock'+String(n)
             n++
             if (nn=='') nn=undefined
-            create_clock_called(cl)
-            update_clock_called(cl, t, nn)   
-            
+            create_clock_called(cl, match.length)
+            update_clock_called(cl, t, nn)               
         })
     
     } else {
