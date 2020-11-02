@@ -1,0 +1,31 @@
+<html>
+    <head>
+        <script src="lib/yuml-diagram.min.js"></script>
+        <script>
+            function loadSvg()
+            {
+                var yumlText = 
+                    `
+// {type:activity}
+// {generate:true}
+
+(Domino's)->(new customers)
+(Domino's)->(update customers)
+(new customers)->(Experian STS /to_xpn)
+(update customers)->(Experian STS /to_xpn) 
+(Experian STS /to_xpn)->(Autocoder Service)->(iCoder Online)->(Experian STS /from_xpn)->(Domino's)
+
+
+`;
+
+                // Generate the diagram
+                var yuml  = new yuml_diagram();
+                var svg = yuml.processYumlDocument(yumlText, false);
+
+                document.body.innerHTML = svg;
+            }
+        </script>
+    </head>
+    <body onload="loadSvg();">        
+    </body>
+</html>

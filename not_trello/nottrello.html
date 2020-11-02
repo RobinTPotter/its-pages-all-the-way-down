@@ -1,0 +1,64 @@
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">        
+        <meta http-equiv="cache-control" content="max-age=0">
+        <meta http-equiv="cache-control" content="no-cache">
+        <link rel="shortcut icon" href="/static/favicon.ico">
+        <script src="../lib/d3.v4.min.js" charset="utf-8"></script>
+        <style>
+            table {
+                border-collapse: collapse;
+            }
+            td {
+                vertical-align: middle;
+                text-align: center;
+                padding: 0px;
+                width: 40px;
+                height: 60px
+            }
+        </style>
+    </head>    
+    <body style="cursor: auto;">  
+        <div id="board"></div>
+    
+        <script>
+        
+            function task(name) {
+                this.name = name
+            }
+            
+            function requirenemt(name) {
+                this.name = name
+                this.tasks = []
+                this.size = 0
+                this.new_task = function(name) { this.tasks.push(new task(name)) } 
+            }
+            
+            function feature(name) {
+                this.name = name
+                this.requirements = []
+                this.new_requirement = function(name) { this.requirements.push(new requirement(name)) } 
+            }
+            
+            function epic(name) {
+                this.name = name
+                this.features = []
+                this.new_feature = function(name) { this.features.push(new feature(name)) } 
+            }
+            
+            var board = [ new epic("wow") ]
+        
+            setTimeout(layout, 200)
+        
+            function layout() {
+                console.log("hello")
+                var visboard = d3.select("board")
+                visboard.data(board)
+                
+            }
+
+        
+        </script>   
+    </body>
+</html>

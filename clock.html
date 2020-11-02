@@ -74,6 +74,36 @@
         
     }
 
+    function scheme() {
+        this.data = { '0': [0,0,50], '12': [255,128,0], '19': [128,0,0] }
+        this.data['24'] = this.data['0']
+        this.keys = Object.keys(this.data)
+        this.interpolate = function(aa) { 
+            for (var kk=0;kk<this.keys.length;kk++) {
+                a=this.keys[kk]
+                b=kk
+                c=this.keys
+                //console.log(a,b,c)
+                if (aa>=Number(a) && aa<Number(this.keys[b+1])) { 
+                    low = a; high = this.keys[b+1];
+                    ran = high - low
+                    prop = (aa-low)/ran
+                    //console.log(aa, low, high, prop   );   
+                    lowc = this.data[low]
+                    highc = this.data[high]
+                    //console.log(lowc, highc)
+                    mycol = [ ]
+                    mycol.push( Math.floor(lowc[0]*(1-prop)) + Math.floor(highc[0]*(prop)) )
+                    mycol.push( Math.floor(lowc[1]*(1-prop)) + Math.floor(highc[1]*(prop)) )
+                    mycol.push( Math.floor(lowc[2]*(1-prop)) + Math.floor(highc[2]*(prop)) )
+                    //console.log('final', mycol)
+                    return mycol
+                }
+            }
+        }
+    }
+    var col = new scheme()
+
     function update_clock_called(clock, tzd, alt) {
 
         var hr = document.getElementById(clock).getElementsByClassName('hr')[0]
@@ -102,9 +132,12 @@
         sec.setAttribute('transform', `rotate(${360*d.getSeconds()/60})`)
         
         var face = document.getElementById(clock).getElementsByTagName('circle')[0]
-        var r=0,g=0,b=0
-        var val = 255 - 255 * Math.pow((Math.abs(( d.getHours() - 12 )) / 12),0.9)
-        face.style.fill = "#" + ((1 << 24) + (val << 16) + (val << 8) + 100).toString(16).slice(1);
+        var intr = col.interpolate(d.getHours())
+        var rr=intr[0],gg=intr[1],bb=intr[2]
+        //var val = 255 - 255 * Math.pow((Math.abs(( d.getHours() - 12 )) / 12),0.9)
+        
+        
+        face.style.fill = "#" + ('0'+(rr).toString(16)).slice(-2) + ('0'+(gg).toString(16)).slice(-2) + ('0'+(bb).toString(16)).slice(-2)
         
         var tz = document.getElementById(clock).getElementsByClassName('tz')[0]
         
