@@ -1,0 +1,50 @@
+<html>
+<head>
+    <script>
+
+    //JavaScript function to obtain a cookie value from publisher first party cookie
+    var TCData = {
+      tcString: 'base64url-encoded TC string with segments',
+      tcfPolicyVersion: 2,
+      cmpId:1000,
+      cmpVersion: 1000
+    }
+
+    function getCookie(cname) {
+      var name = cname + "=";
+      var decodedCookie = decodeURIComponent(document.cookie);
+      var ca = decodedCookie.split(';');
+      for(var i = 0; i <ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0) == ' ') {
+          c = c.substring(1);
+        }
+        if (c.indexOf(name) == 0) {
+          return c.substring(name.length, c.length);
+        }
+      }
+      return "";
+    }
+
+    function __tcfapi(command, version, callback, parameter){
+        console.log(command, version, callback, parameter)
+        if (command=='getTCData') {
+
+            console.log('about to do call back', callback, parameter)
+            callback(TCData, true, parameter)
+        }
+    }
+
+    //Experian Match Tag – setup to populate fpid with our first party cookie called ‘myID’ and a hardcoded publisher ID of ‘pub-1234’
+
+    var experianScript = document.createElement('script');
+    experianScript.type = 'text/javascript';
+    experianScript.src = 'http://localhost:8080/match/log.js?fpid='+getCookie("myID")+'&publisherid=x1234';
+    document.head.appendChild(experianScript);
+    </script>
+
+</head>
+<body>
+
+</body>
+</html>
