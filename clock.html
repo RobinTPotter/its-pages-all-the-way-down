@@ -152,13 +152,15 @@
     if (window.location.search) {
     
         console.log(window.location.search)
-        re = /[A-Za-z]*:[A-Za-z\/_]*/g;
+        //re = /[A-Za-z]*:[A-Za-z\/_]*/g;
+        re = /[^,^:]*:[A-Za-z\/_]*/g;
         match = window.location.search.match(re)
         console.log(match)
         var n = 1
         match.forEach(function(m) {
             var d = m.split(':')
             var nn= d[0], t=d[1]
+            nn = nn.replaceAll("%20"," ")
             var cl = 'clock'+String(n)
             n++
             if (nn=='') nn=undefined
