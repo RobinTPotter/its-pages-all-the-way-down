@@ -153,7 +153,7 @@
     
         console.log(window.location.search)
         //re = /[A-Za-z]*:[A-Za-z\/_]*/g;
-        re = /[^,^:]*:[A-Za-z\/_]*/g;
+        re = /[^,^:^?]*:[A-Za-z\/_]*/g;
         match = window.location.search.match(re)
         console.log(match)
         var n = 1
