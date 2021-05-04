@@ -1,0 +1,262 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 744.0945 1052.3622">
+    <defs>
+        <path id="cross" d="M -20 -20 L 0 0 M 20 -20 L -20 20" style="fill:none;stroke:#000;stroke-width:2"></path>
+        <pattern id="p_squares" x="5" y="0" width="50" height="50" patternUnits="userSpaceOnUse" patternTransform="scale(2)">
+            <rect x="10" y="10" width="30" height="30" style="fill:#ddd;stroke:#aaa" />
+            <rect x="0" y="0" width="30" height="30" style="fill:#fff;stroke:#aaa;stroke-width:1" />
+        </pattern>
+    </defs>
+
+
+    <g id="card" transform="scale(0.7)">
+        <g>
+            <g transform="translate(-20 -20) rotate(0)"><use xlink:href="#cross" x="0" y="0"/></g>
+            <g transform="translate(1020 1430) rotate(180)"><use xlink:href="#cross" x="0" y="0"/></g>
+            <g transform="translate(1020 -20) rotate(90)"><use xlink:href="#cross" x="0" y="0"/></g>
+            <g transform="translate(-20 1430) rotate(270)"><use xlink:href="#cross" x="0" y="0"/></g>
+
+            <g transform="translate(510 -25) rotate(45)"><use xlink:href="#cross" x="0" y="0"/></g>
+            <g transform="translate(-25 715) rotate(315)"><use xlink:href="#cross" x="0" y="0"/></g>
+            <g transform="translate(1025 715) rotate(135)"><use xlink:href="#cross" x="0" y="0"/></g>
+            <g transform="translate(510 1435) rotate(225)"><use xlink:href="#cross" x="0" y="0"/></g>
+
+            <g class="insides">
+                <rect x="0" y="0" width="1000" height="1410" style="fill:none;stroke:#000;stroke-width:15"></rect>
+                <rect x="30" y="30" width="940" height="1350" style="fill:none;stroke:#000;stroke-width:5"></rect>
+                <rect x="50" y="50" width="900" height="1310" style="fill:url(#p_squares);stroke:#000;stroke-width:5"></rect>
+                <g id="bollocks" ></g>
+                
+                <text id="prop01" x="80" y="1000" style="font-size:100px;font-style:serif;font-weight:bold;fill:#000;stroke:#000;stroke-width:35">TEST</text>
+                <text id="prop02" x="80" y="1150" style="font-size:100px;font-style:serif;font-weight:bold;fill:#000;stroke:#000;stroke-width:35">TEST</text>
+                <text id="prop03" x="80" y="1300" style="font-size:100px;font-style:serif;font-weight:bold;fill:#000;stroke:#000;stroke-width:35">TEST</text>
+                
+                <text id="prop11"   x="80" y="1000" style="font-size:100px;font-style:serif;font-weight:bold;fill:#000;stroke:#fff;stroke-width:15">TEST</text>
+                <text id="prop12"   x="80" y="1150" style="font-size:100px;font-style:serif;font-weight:bold;fill:#000;stroke:#fff;stroke-width:15">TEST</text>
+                <text id="prop13"   x="80" y="1300" style="font-size:100px;font-style:serif;font-weight:bold;fill:#000;stroke:#fff;stroke-width:15">TEST</text>
+                
+                <text id="prop21" x="80" y="1000" style="font-size:100px;font-style:serif;font-weight:bold;fill:#000;stroke:#000;stroke-width:5">TEST</text>
+                <text id="prop22" x="80" y="1150" style="font-size:100px;font-style:serif;font-weight:bold;fill:#000;stroke:#000;stroke-width:5">TEST</text>
+                <text id="prop23" x="80" y="1300" style="font-size:100px;font-style:serif;font-weight:bold;fill:#000;stroke:#000;stroke-width:5">TEST</text>
+                
+                <text id="tprop01" x="540" y="140"  style="font-size:80px;font-style:serif;font-weight:bold;fill:#000;stroke:#000;stroke-width:35">sierpinski</text>                
+                <text id="tprop11" x="540" y="140"  style="font-size:80px;font-style:serif;font-weight:bold;fill:#000;stroke:#fff;stroke-width:15">sierpinski</text>
+                <text id="tprop21" x="540" y="140"  style="font-size:80px;font-style:serif;font-weight:bold;fill:#000;stroke:#000;stroke-width:5">sierpinski</text>
+                                              
+                <text id="tprop01" x="640" y="240"  style="font-size:80px;font-style:serif;font-weight:bold;fill:#000;stroke:#000;stroke-width:35">triangles</text>                
+                <text id="tprop11" x="640" y="240"  style="font-size:80px;font-style:serif;font-weight:bold;fill:#000;stroke:#fff;stroke-width:15">triangles</text>
+                <text id="tprop21" x="640" y="240"  style="font-size:80px;font-style:serif;font-weight:bold;fill:#000;stroke:#000;stroke-width:5">triangles</text>
+
+                
+            </g>
+        </g>
+    </g>
+
+    <g id="main_panel" transform="scale(1.0)">
+        <g id="deck"></g>
+    </g>
+
+    <script id="main_script" type="text/javascript"><![CDATA[
+
+        ///twitch();
+
+        var pos = 0
+        var spacing_x = 1.12
+        var spacing_y = 1.1
+        var num_cards = 3
+        var cards_per_page = num_cards * num_cards
+
+        var deck_offset_x = 80
+        var deck_offset_y = 141
+        var deck_scale = 1 / (num_cards+1)
+
+        var deck = document.getElementById('deck')
+        deck.setAttribute('transform','scale('+deck_scale+') translate('+deck_offset_x+' '+deck_offset_y+')')
+
+        var main_panel = document.getElementById('main_panel')
+        main_panel.setAttribute('transform','scale(.88)')
+        
+        function rgbToHex(rgb) { 
+          var hex = Number(Math.floor(rgb)).toString(16);
+          if (hex.length < 2) {
+               hex = "0" + hex;
+          }
+          return hex;
+        }
+
+        function fullColorHex(r,g,b) {   
+          var red = rgbToHex(r);
+          var green = rgbToHex(g);
+          var blue = rgbToHex(b);
+          return red+green+blue;
+        }
+        
+        
+        function dot(b,col, x,y) {
+            var NS = 'http://www.w3.org/2000/svg'
+           var g = document.createElementNS(NS,'g')
+           
+            var c = document.createElementNS(NS,'circle')
+            ///console.log(c)
+            c.setAttribute('r', '10')
+            c.setAttribute('style',`fill:black`)
+            g.setAttribute('transform',`translate(${x},${y})`)
+            g.appendChild(c)
+            
+            var c = document.createElementNS(NS,'circle')
+            ///console.log(c)
+            c.setAttribute('r', '8')
+            c.setAttribute('style',`fill:${col}`)
+            g.setAttribute('transform',`translate(${x},${y})`)
+            g.appendChild(c)
+            b.appendChild(g)
+        
+        }
+
+        //change main card and clone and put in deck group
+        function createcard(thing,runDeck) {
+
+            var card = document.getElementById('card')
+            card.style.visibility = 'visible'
+
+
+            //create some path data to go in the bollocks path element
+            data = ''
+            
+            ITERATIONS = Math.floor(Math.random()*300 + 300)
+            COLOUR = Math.floor(Math.random() * 7)
+            cols= ['white','yellow','cyan','green','magenta','red','blue','black']
+            SIZE = Math.floor(Math.random()*1300+5)
+        
+            r =255 * COLOUR
+            g = 255 - 255 * COLOUR
+            b = 128 * COLOUR
+            col = cols[COLOUR] //fullColorHex(r,g,b)
+            
+     
+            var b = document.getElementById('bollocks')
+            
+            triangle = []
+            points = 3
+            middlex = 0
+            middley = 0
+            
+            while (points >0) {
+                p = [Math.floor(Math.random()*SIZE), Math.floor(Math.random()*SIZE)]
+                triangle.push(p)
+                middlex=middlex+p[0]/3
+                middley=middley+p[1]/3
+                points--
+            }
+            
+            console.log(middlex,middley)
+            
+          b.setAttribute('transform',`translate(${540-middlex},${730-middley})`)
+                    
+            start_point = [Math.random()*SIZE,Math.random()*SIZE]
+            point = start_point
+
+            iterations = 0    
+
+
+
+            for (var ii=0;ii<ITERATIONS;ii++) {
+               
+                nextp = Math.floor(Math.random()*3)
+                point = [ Math.floor((point[0]+triangle[nextp][0])/2),  Math.floor((point[1]+triangle[nextp][1])/2)   ]
+                dot(b,col,point[0],point[1])
+               
+               
+               
+            }
+            
+            
+            for (var i=0;i<3;i++) { 
+                document.getElementById('prop'+i+'1').textContent = `SIZE: ${SIZE}`
+                document.getElementById('prop'+i+'2').textContent = `COLOUR: ${COLOUR}`
+                document.getElementById('prop'+i+'3').textContent = `ITERATIONS: ${ITERATIONS}`
+            }
+               
+            for (var i=1;i<4;i++) { 
+                xx=0//Math.random()*20
+                document.getElementById('prop0'+i).setAttribute('y', 960 + i * 120 + xx)
+                document.getElementById('prop1'+i).setAttribute('y', 960 + i * 120 + xx)
+                document.getElementById('prop2'+i).setAttribute('y', 960 + i * 120 + xx)
+                
+                xx=0//Math.random()*20
+                document.getElementById('prop0'+i).setAttribute('x', 80 + xx)
+                document.getElementById('prop1'+i).setAttribute('x' ,80+ xx)
+                document.getElementById('prop2'+i).setAttribute('x', 80 + xx)
+            }
+            
+            
+            
+            
+
+            if (!runDeck) {
+                //clone main card and add to the "deck"
+                var hello = card.cloneNode(true)
+                hello.id = (new Date).getTime()
+                hello.setAttribute('transform','translate('+(spacing_x*1000*(pos % num_cards))+' '+(spacing_y*1410*Math.floor(pos/num_cards))+')');
+
+                var deck = document.getElementById('deck')
+                b.innerHTML=""
+                deck.appendChild(hello)
+                card.style.visibility = 'hidden'
+                pos++
+            }
+        }
+
+        // page number unless comes from parameter
+        page_number=0
+
+        //count of cards printed
+        card_count=0
+        
+        //set up default values first 
+        // no page number, run test page
+        v = []
+        //all numbers and extra each suit
+        for (var nn=0;nn<8;nn++) v.push(String(nn))
+
+    var page
+
+        //get the page number from parameter
+        if (window.location.search) {
+            re = /\?page=(\d+)/;
+            match = window.location.search.match(re) 
+            if (match) {
+                page_number = Number(match[1])
+            } else {
+                re = /\?page=(\w+)/;
+                page = window.location.search.match(re)[1] 
+            }
+        }
+        
+        if (!page) {
+        
+            v = []
+            for (var nn=0;nn<27;nn++) v.push(String(nn))
+
+            //print cards only to fill page
+            for (var vv=0;vv<v.length;vv++) {
+                if (card_count>=page_number*cards_per_page && card_count<(page_number+1)*cards_per_page) createcard(v[vv])
+                card_count++
+            }
+
+            document.getElementsByTagName('svg')[0].removeChild(document.getElementById('card'))
+            //console.log(document.getElementsByTagName('svg')[0])
+                
+        } else {
+            createcard(v[vv],1) 
+        }
+        
+    ]]>
+    </script>
+    <script type="text/javascript">
+    <![CDATA[
+        document.getElementsByTagName('svg')[0].removeChild(document.getElementById('main_script'))
+    ]]>
+    </script>
+
+
+</svg>
