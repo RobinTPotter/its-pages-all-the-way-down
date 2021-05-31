@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+ xmlns:xlink="http://www.w3.org/1999/xlink"
+viewBox="0 0 297mm 210mm">
+
+  <g id="card" transform="translate(15,15)">
+    </g>
+
+
+    <script id="main_script" type="text/javascript"><![CDATA[
+        var size
+        var dim=30
+        //get the page number from parameter
+        if (window.location.search) {
+            re = /\?size=(\d+)/;
+            size=Number( window.location.search.match(re)[1] )
+            //alert(page_number)
+        } else {
+            size=10
+        }
+        
+        var ns = 'http://www.w3.org/2000/svg'
+        var card = document.getElementById('card')
+
+        for (var s=0;s<2;s++) {
+            for (var y=0;y<size;y++) {
+                for (var x=0;x<size;x++) {
+
+            var hline = document.createElementNS(ns, 'rect')
+            hline.setAttribute('x', x*(dim+2)+s*((dim+2)*(size+3)))
+            hline.setAttribute('y', y*(dim+2))
+            hline.setAttribute('width', dim)
+            hline.setAttribute('height', dim)
+            hline.setAttribute('style','stroke:#555;stroke-width:1;stroke-linecap:round;fill:none;stroke-width:0.5')
+            card.appendChild(hline)
+
+
+                }
+            }
+        }
+
+            
+
+
+    ]]>
+    </script>
+    
+</svg>
