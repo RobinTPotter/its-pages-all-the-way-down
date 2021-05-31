@@ -2,13 +2,17 @@
  xmlns:xlink="http://www.w3.org/1999/xlink"
 viewBox="0 0 297mm 210mm">
 
-  <g id="card" transform="translate(15,15)">
+
+<defs>
+<path id="boat" d="M 3.3333332e-8,2.6458333 2.6458333,5.2916666 H 15.875 L 17.197917,2.6458333 H 11.90625 V 1.3229166 H 10.583333 V 0 H 9.2436523 V 1.3229166 H 7.9375 V 0 H 6.6145833 V 1.3229166 H 5.2916667 v 1.3229167 z" />
+</defs>
+  <g id="card" transform="translate(15,15) scale(0.4)">
     </g>
 
 
     <script id="main_script" type="text/javascript"><![CDATA[
         var size
-        var dim=30
+        var dim=35.0
         //get the page number from parameter
         if (window.location.search) {
             re = /\?size=(\d+)/;
@@ -22,20 +26,52 @@ viewBox="0 0 297mm 210mm">
         var card = document.getElementById('card')
 
         for (var s=0;s<2;s++) {
+
             for (var y=0;y<size;y++) {
                 for (var x=0;x<size;x++) {
 
-            var hline = document.createElementNS(ns, 'rect')
-            hline.setAttribute('x', x*(dim+2)+s*((dim+2)*(size+3)))
-            hline.setAttribute('y', y*(dim+2))
-            hline.setAttribute('width', dim)
-            hline.setAttribute('height', dim)
-            hline.setAttribute('style','stroke:#555;stroke-width:1;stroke-linecap:round;fill:none;stroke-width:0.5')
-            card.appendChild(hline)
+                    if (x==0 && y>-1) {
+
+                        var hline = document.createElementNS(ns, 'text')
+                        hline.setAttribute('x', -20 + x*(dim+2)+s*((dim+2)*(size+3)))
+                        hline.setAttribute('y', y*(dim+2) + dim *0.7)
+                        hline.setAttribute('style','fill:#000')
+                        hline.innerHTML = String.fromCharCode(y+65)
+                        card.appendChild(hline)
+
+                        if (y==0) {
+                            var hline = document.createElementNS(ns, 'text')
+                            hline.setAttribute('x', x*(dim+2)+s*((dim+2)*(size+3)))
+                            hline.setAttribute('y',  - 10)
+                            hline.setAttribute('style','fill:#000')
+                            hline.innerHTML = "NAME: ........................................"
+                            card.appendChild(hline)
+                        }
+
+                    }
+
+                    if (x>-1 && y==9) {
+
+                        var hline = document.createElementNS(ns, 'text')
+                        hline.setAttribute('x', dim*0.25 + x*(dim+2)+s*((dim+2)*(size+3)))
+                        hline.setAttribute('y', y*(dim+2) + dim *1.75)
+                        hline.setAttribute('style','fill:#000')
+                        hline.innerHTML = String(x+1)
+                        card.appendChild(hline)
+                    }
+
+                    var hline = document.createElementNS(ns, 'rect')
+                    hline.setAttribute('x', x*(dim+2)+s*((dim+2)*(size+3)))
+                    hline.setAttribute('y', y*(dim+2))
+                    hline.setAttribute('width', dim)
+                    hline.setAttribute('height', dim)
+                    hline.setAttribute('style','stroke:#555;stroke-linecap:round;fill:none;stroke-width:0.5')
+                    card.appendChild(hline)
 
 
                 }
             }
+
         }
 
             
