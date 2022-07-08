@@ -1,6 +1,61 @@
 <html>
   <body>
-    <form>
+    <h1>Paste me!</h1>
+    <p>use url?query, where query is a comma separated list of value. prefix with * makes input readonly,
+    update the boxes as you wish and click the green box to copy the result to clipboard. <a href="?robin,*was,here">example</a></p>
+    <form id="hello">
+    <label>separator: </label><input id="sep" type="text" value=" " size="3" />
+    <br />
+    <br />
     </form>
+    <div id="output" style="background-color: #44ff44" onclick="copyme()"></div>
   </body>
+  <script>
+  
+    var sep = " "
+  
+    if (window.location.search) {
+        search = window.location.search
+        if (search.indexOf("?")==0) match =search.split("?")[1]
+        match = match.split(",")
+        match.forEach(function(m) {
+            fixed = false
+            if (m.indexOf("*")==0) {
+                //fixed
+                m = m.split("*",2)[1]
+                fixed = true
+            }
+            console.log(m, fixed)
+            e = document.createElement("input")
+            e.value = m
+            e.name = "hellotext"
+            e.type = "text"
+            if (fixed) {
+                e.readOnly = true
+                e.style.backgroundColor = "#eeeeee"
+            } else {
+                e.addEventListener("keyup", function(d) { update() })
+                e.addEventListener("focus", function(d) { this.selectionStart=0; this.selectionEnd=-1 })
+            }
+            document.getElementById("hello").appendChild(e)
+        })
+        update()
+    }
+    
+    document.getElementById("sep").addEventListener("keyup", function(d) { update() })
+    document.getElementById("sep").addEventListener("focus", function(d) { this.selectionStart=0; this.selectionEnd=-1 })
+            
+    function update() {
+        var res = ""
+        sep = document.getElementById("sep").value
+        document.getElementsByName("hellotext").forEach(function(n) { if (res.length==0) {res=n.value} else {res=res+sep+n.value}})
+        document.getElementById("output").innerHTML = res.trim()
+    }
+    
+    function copyme() {
+        var copyText = document.getElementById("output")
+        navigator.clipboard.writeText(copyText.innerHTML)
+    }
+    
+  </script>
 </html>
