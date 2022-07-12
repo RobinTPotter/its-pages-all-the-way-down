@@ -27,7 +27,7 @@
             }
             console.log(m, fixed)
             e = document.createElement("input")
-            e.value = decodeURI(m)
+            e.value = decodeURIComponent(m)
             e.name = "hellotext"
             e.type = "text"
             if (fixed) {
