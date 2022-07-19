@@ -2,7 +2,8 @@
   <body>
     <h1>Paste me!</h1>
     <p>use url?query, where query is a comma separated list of value. prefix with * makes input readonly,
-    update the boxes as you wish and click the green box to copy the result to clipboard. <a href="?robin,*was,here">example</a></p>
+	include "&sep=X" to set the separator, default is space.
+    update the boxes as you wish and click the green box to copy the result to clipboard. <a href="?robin,*was,here">example 1</a> <a href="?hello,plop&sep=5">example 2</a></p>
     <form id="hello">
     <label>separator: </label><input id="sep" type="text" value=" " size="3" />
     <br />
@@ -16,7 +17,15 @@
   
     if (window.location.search) {
         search = window.location.search
-        if (search.indexOf("?")==0) match =search.split("?")[1]
+        if (search.indexOf("?")==0) match=search.split(/[?&]/)[1]
+	
+		test_sep =search.split(/[?&]/)
+		if (test_sep.length==2) {
+			test_sep=test_sep[1]
+			if (test_sep.indexOf("=")!=-1) sep = test_sep.split("=")[1]
+		} 
+		
+		document.getElementById("sep").value = sep
         match = match.split(",")
         match.forEach(function(m) {
             fixed = false
