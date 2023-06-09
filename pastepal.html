@@ -9,7 +9,10 @@
     <br />
     <br />
     </form>
-    <div id="output" style="background-color: #44ff44" onclick="copyme()"></div>
+    <textarea spellcheck="false" readonly id="output" style="background-color: #44ff44;resize:none" height="0" onclick="copyme()"></textarea>
+    <br />
+    <br />
+    <a id="newlink" href=""></>
   </body>
   <script>
   
@@ -35,10 +38,12 @@
                 fixed = true
             }
             console.log(m, fixed)
-            e = document.createElement("input")
+            e = document.createElement("textarea")
             e.value = decodeURIComponent(m)
             e.name = "hellotext"
             e.type = "text"
+			e.style="resize:none"
+			e.spellcheck = false
             if (fixed) {
                 e.readOnly = true
                 e.style.backgroundColor = "#eeeeee"
@@ -56,9 +61,16 @@
             
     function update() {
         var res = ""
+		var linkres= ""
+		var heightmax = -1
         sep = document.getElementById("sep").value
-        document.getElementsByName("hellotext").forEach(function(n) { if (res.length==0) {res=n.value} else {res=res+sep+n.value}})
+        document.getElementsByName("hellotext").forEach(function(n) { if (res.length==0) {res=n.value; linkres=encodeURI(n.value)} else { if (n.readOnly) {tick="*"} else { tick="" }; res=res+sep+n.value; linkres=linkres+","+tick+encodeURI(n.value); }})
+        document.getElementsByName("hellotext").forEach(function(n) { if (heightmax<n.scrollHeight) {heightmax=n.scrollHeight}})
         document.getElementById("output").innerHTML = res.trim()
+        document.getElementById("output").style.height = document.getElementById("output").scrollHeight
+        document.getElementsByName("hellotext").forEach(function(n) { n.style.height=heightmax })
+		document.getElementById("newlink").href=document.location.pathname + "?" + linkres
+		document.getElementById("newlink").innerHTML=document.location.pathname + "?" + linkres
     }
     
     function copyme() {
