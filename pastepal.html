@@ -23,8 +23,8 @@
         if (search.indexOf("?")==0) match=search.split(/[?&]/)[1]
 	
 		test_sep =search.split(/[?&]/)
-		if (test_sep.length==2) {
-			test_sep=test_sep[1]
+		if (test_sep.length==3) {
+			test_sep=test_sep[2]
 			if (test_sep.indexOf("=")!=-1) sep = test_sep.split("=")[1]
 		} 
 		
