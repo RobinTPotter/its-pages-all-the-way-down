@@ -69,8 +69,7 @@
         document.getElementById("output").innerHTML = res.trim()
         document.getElementById("output").style.height = document.getElementById("output").scrollHeight
         document.getElementsByName("hellotext").forEach(function(n) { n.style.height=heightmax })
-		if (sep.length==0) sepcode=""
-		else sepcode="&sep=" + encodeURI(sep)
+		sepcode="&sep=" + encodeURI(sep)
 		document.getElementById("newlink").href=document.location.pathname + "?" + linkres + sepcode
 		document.getElementById("newlink").innerHTML=document.location.pathname + "?" + linkres + sepcode
 		
