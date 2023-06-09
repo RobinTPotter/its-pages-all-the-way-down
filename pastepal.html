@@ -64,7 +64,7 @@
 		var linkres= ""
 		var heightmax = -1
         sep = document.getElementById("sep").value
-        document.getElementsByName("hellotext").forEach(function(n) { if (res.length==0) {res=n.value; linkres=encodeURI(n.value)} else { if (n.readOnly) {tick="*"} else { tick="" }; res=res+sep+n.value; linkres=linkres+","+tick+encodeURI(n.value); }})
+        document.getElementsByName("hellotext").forEach(function(n) {if (n.readOnly) {tick="*"} else { tick="" }; if (res.length==0) { comma=""; ssep=""} else { ssep=sep; comma="," } res=res+ssep+n.value; linkres=linkres+comma+tick+encodeURI(n.value); })
         document.getElementsByName("hellotext").forEach(function(n) { if (heightmax<n.scrollHeight) {heightmax=n.scrollHeight}})
         document.getElementById("output").innerHTML = res.trim()
         document.getElementById("output").style.height = document.getElementById("output").scrollHeight
