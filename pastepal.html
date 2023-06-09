@@ -9,7 +9,7 @@
     <br />
     <br />
     </form>
-    <textarea spellcheck="false" readonly id="output" style="background-color: #44ff44;resize:none" height="0" onclick="copyme()"></textarea>
+    <textarea spellcheck="false" readonly id="output" style="background-color: #44ff44;resize:none; width:100%"  onclick="copyme()"></textarea>
     <br />
     <br />
     <a id="newlink" href=""></>
@@ -25,7 +25,7 @@
 		test_sep =search.split(/[?&]/)
 		if (test_sep.length==3) {
 			test_sep=test_sep[2]
-			if (test_sep.indexOf("=")!=-1) sep = test_sep.split("=")[1]
+			if (test_sep.indexOf("=")!=-1) sep = decodeURI(test_sep.split("=")[1])
 		} 
 		
 		document.getElementById("sep").value = sep
@@ -69,8 +69,11 @@
         document.getElementById("output").innerHTML = res.trim()
         document.getElementById("output").style.height = document.getElementById("output").scrollHeight
         document.getElementsByName("hellotext").forEach(function(n) { n.style.height=heightmax })
-		document.getElementById("newlink").href=document.location.pathname + "?" + linkres
-		document.getElementById("newlink").innerHTML=document.location.pathname + "?" + linkres
+		if (sep.length==0) sepcode=""
+		else sepcode="&sep=" + encodeURI(sep)
+		document.getElementById("newlink").href=document.location.pathname + "?" + linkres + sepcode
+		document.getElementById("newlink").innerHTML=document.location.pathname + "?" + linkres + sepcode
+		
     }
     
     function copyme() {
