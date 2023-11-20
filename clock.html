@@ -113,18 +113,9 @@
         // date timezone
         
         let options = {
-        timeZone: tzd,
-        year: 'numeric',
-        month: 'numeric',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: 'numeric',
-        second: 'numeric',
-        },
-        formatter = new Intl.DateTimeFormat([], options)
         
-        var d = new Date(formatter.format(new Date()))    
-        
+        var d = new Date(new Date().toLocaleString('en', {"timeZone": tzd}))
+            
         //if (tzd=='Europe/London') d.setHours(d.getHours()+1)
         //hr.setAttribute('transform', `rotate(${360*((d.getHours()%12)/12)+d.getMinutes()/60})`)
         hr.setAttribute('transform', `rotate(${360*(((d.getHours()+d.getMinutes()/60)%12)/12)})`)
