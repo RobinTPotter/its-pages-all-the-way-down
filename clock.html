@@ -109,11 +109,9 @@
         var hr = document.getElementById(clock).getElementsByClassName('hr')[0]
         var min = document.getElementById(clock).getElementsByClassName('min')[0]
         var sec = document.getElementById(clock).getElementsByClassName('sec')[0]
-       
-        // date timezone
-        var d = new Date(new Date().toLocaleString('en', {timeZone: tzd}))
-
-        
+              
+        var d = new Date(new Date().toLocaleString('en', {"timeZone": tzd}))
+            
         //if (tzd=='Europe/London') d.setHours(d.getHours()+1)
         //hr.setAttribute('transform', `rotate(${360*((d.getHours()%12)/12)+d.getMinutes()/60})`)
         hr.setAttribute('transform', `rotate(${360*(((d.getHours()+d.getMinutes()/60)%12)/12)})`)
