@@ -4,6 +4,8 @@
 
     var NS = 'http://www.w3.org/2000/svg'
 
+	var hoursChange = 0
+			
     function create_clock_called(clock, num) {
     
     console.log(clock, num)
@@ -104,13 +106,14 @@
     }
     var col = new scheme()
 
-    function update_clock_called(clock, tzd, alt) {
+    function update_clock_called(clock, tzd, alt, diff) {
 
         var hr = document.getElementById(clock).getElementsByClassName('hr')[0]
         var min = document.getElementById(clock).getElementsByClassName('min')[0]
         var sec = document.getElementById(clock).getElementsByClassName('sec')[0]
               
         var d = new Date(new Date().toLocaleString('en', {"timeZone": tzd}))
+		d.addHours(diff)
             
         //if (tzd=='Europe/London') d.setHours(d.getHours()+1)
         //hr.setAttribute('transform', `rotate(${360*((d.getHours()%12)/12)+d.getMinutes()/60})`)
@@ -131,10 +134,15 @@
         tz.innerHTML = alt==undefined?tzd:alt
         
         setTimeout(function() {
-        update_clock_called(clock, tzd, alt)
+        update_clock_called(clock, tzd, alt,hoursChange)
         }, 500)
     
     }
+
+	Date.prototype.addHours = function(h) {
+	  this.setTime(this.getTime() + (h*60*60*1000));
+	  return this;
+	}
     
     if (window.location.search) {
     
@@ -146,18 +154,21 @@
         var n = 1
         match.forEach(function(m) {
             var d = m.split(':')
-            var nn= d[0], t=d[1]
-            nn = nn.replaceAll("%20"," ")
-            var cl = 'clock'+String(n)
+            var nameplus = d[0].split("=")
+			var name = nameplus[0]
+			if (nameplus.length>1) hoursChange = Number(nameplus[1])
+			var	timezone = d[1]
+            name = name.replaceAll("%20"," ")
+            var cl = 'clock'+String(name)
             n++
-            if (nn=='') nn=undefined
+            if (name == '') name = undefined
             create_clock_called(cl, match.length)
-            update_clock_called(cl, t, nn)               
+            update_clock_called(cl, timezone, name, 0)               
         })
     
     } else {
         create_clock_called('clock', 1)
-        update_clock_called('clock', 'Europe/London')    
+        update_clock_called('clock', 'Europe/London', 0)    
     }
     
     
