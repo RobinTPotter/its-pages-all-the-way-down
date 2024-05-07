@@ -15,7 +15,10 @@
                 m.style.color = cl[cli]
                 setTimeout(tick, timing)
             }
-            
+            function tick2() {
+                document.location = document.location
+                setTimeout(tick2, 100*timing)
+            }
             function dothis() {
                 m = document.getElementById('message')
                 if (window.location.search) m.textContent = decodeURI(window.location.search).slice(1)
@@ -24,7 +27,8 @@
                 m.style.fontSize = `${Math.round(new_size)}px`
                 tick()
             }
-
+            //tick2()
+            setTimeout(tick2, 100*timing)
         </script>
     </body>
 </html>
