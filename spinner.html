@@ -27,18 +27,6 @@
 			var op=document.getElementById("opts")
 			for (var oo=0; oo<options.length; oo++) {
 			
-/*
-<path id="P" pathLength="100" d="M0 25h50" stroke="blue"/>
-  <text>
-    <textPath href="#P" 
-              startoffset="100" text-anchor="end" 
-              dominant-baseline="middle"
-              fill="green" font-size="14px">Right aligned</textPath>
-  </text>
-*/
-
-
-
 				var gt = document.createElementNS(NS,'g')
 				var gt2 = document.createElementNS(NS,'g')
 				var ln2 = document.createElementNS(NS,'path')
@@ -53,14 +41,13 @@
 				ln.setAttribute("d", "M0 0h20")
 				ln.setAttribute("style", "stroke:none")
 
-
 				var text = document.createElementNS(NS,'text')
 				var textP = document.createElementNS(NS,'textPath')
 				textP.setAttribute('href',`#P${oo}`)
 				textP.setAttribute("startOffset", "100")
 				textP.setAttribute('dominant-baseline','middle')
 				textP.setAttribute('text-anchor','end')
-				textP.setAttribute('style','font-family:sans-serif;font-size:5px;stroke-width:0.25px;stroke:black')
+				textP.setAttribute('style','font-family:sans-serif;font-size:4px;stroke-width:0.2px;stroke:black')
 				textP.innerHTML = options[oo]
 				text.appendChild(textP)
 				gt.appendChild(ln)
