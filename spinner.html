@@ -23,7 +23,7 @@
 			var lag;
 			var NS = 'http://www.w3.org/2000/svg'
 			var options = ((new URLSearchParams(window.location.search)).get("options") || "red,green,blue").split(",");
-
+			options = options.sort(function(a,b){ return Math.random()-0.5})
 			var op=document.getElementById("opts")
 			for (var oo=0; oo<options.length; oo++) {
 				
