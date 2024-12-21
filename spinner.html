@@ -9,6 +9,7 @@
 			</g>
 		</svg>
 		<div id="nob"></div>
+		<div style="alignment:center" onclick="go()">Go</div>
 		<script>
 
 			var svg = document.getElementById("svg")
@@ -19,7 +20,7 @@
 			svg.style.top = "0"
 			svg.style.left = "0"
 			var rr;
-			var vv;
+			var vv = 0;
 			var lag;
 			var NS = 'http://www.w3.org/2000/svg'
 			var options = ((new URLSearchParams(window.location.search)).get("options") || "red,green,blue").split(",");
@@ -87,6 +88,7 @@
 			}
 
 			function go() {
+				if (vv>0) return;
 				rr = 0
 				lag = Math.random() * 0.025 + 0.97
 				vv= 40 + 50 * Math.random()
