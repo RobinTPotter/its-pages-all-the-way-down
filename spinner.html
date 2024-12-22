@@ -9,7 +9,7 @@
 			</g>
 		</svg>
 		<div id="nob"></div>
-		<a onclick="go()"><div style="background-color:red;font-size:2rem;display: table;margin-right: auto;margin-left: auto;">Go</div></a>
+		<a onclick="go()"><div style="background-color:red;font-size:4rem;display: table;margin-right: auto;margin-left: auto;">Go</div></a>
 		<script>
 
 			var svg = document.getElementById("svg")
@@ -99,7 +99,7 @@
 				rot(rr)
 				rr = rr + vv
 				vv = vv * lag
-				if (vv<0.01) vv = 0
+				if (vv<0.05) vv = 0
 				if (vv>0) setTimeout(tick, 20)
 			}
 			
