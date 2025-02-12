@@ -1,25 +1,27 @@
 <html>
 	<body>
 		<svg id="svg" viewBox="-25 -25 50 50">
-			<circle style="stroke:grey;fill:none" r="22" x="0" y="0" />
+			<circle style="stroke:grey;fill:none" r="24" x="0" y="0" />
 			<g id="opts"></g>
 			<g id="xf">
 				<path d="M-2 -2l2 18l2 -18 z" style="stroke:black;fill:red;stroke-width:0.5px;stroke-miterlimit:13;stroke-linejoin:miter" />
 				<!-- <rect style="stroke:black;fill:red" x="-2" y="-2" width="4" height="20" transform="rotate(0)" />	-->
 			</g>
 		</svg>
-		<button class="button button3" id="nob" style="position:absolute; top:2px" hidden onclick="rego()">Spin again</div>
+		<button class="button button3" id="nob" style="position:absolute; top:2px"  onclick="rego()">Spin again</div>
 		
 		<script>
 
 			var svg = document.getElementById("svg")
-			w = Math.min(window.innerHeight, window.innerWidth)
+			var again = document.getElementById("nob")
+			w = Math.min(window.innerHeight - 20, window.innerWidth - 20)
 			svg.style.width = w
 			svg.style.height = w
 			svg.style.position = "absolute"
 			svg.style.top = "0"
-			svg.style.left = "0"
-			document.getElementById("nob").style.top = w
+			svg.style.left = (window.innerWidth - w) / 2
+			again.style.top = w
+			again.style.left = (window.innerWidth - again.offsetWidth) / 2
 			var rr;
 			var vv = 0;
 			var lag;
@@ -45,7 +47,7 @@
 				var ln2 = document.createElementNS(NS,'path')
 				ln2.setAttribute("id", `P${oo}`)
 				ln2.setAttribute("pathLength", "100")
-				ln2.setAttribute("d", "M0 0h22")
+				ln2.setAttribute("d", "M0 0h24")
 				ln2.setAttribute("style", "stroke:grey; stroke-width:0.2px")
 
 				var ln = document.createElementNS(NS,'path')
@@ -102,7 +104,7 @@
 				vv = vv * lag
 				if (vv<0.05) {
 					vv = 0
-					document.getElementById("nob").removeAttribute("hidden")
+					again.removeAttribute("hidden")
 				}
 				if (vv>0) setTimeout(tick, 20)
 			}
@@ -111,10 +113,10 @@
 				if (vv>0 && rr>0) return;
 				go()
 				tick()			
-				document.getElementById("nob").setAttribute("hidden","")
+				again.setAttribute("hidden","")
 			}
 			
-			
+			again.setAttribute("hidden","")
 			go()
 			tick()
 
