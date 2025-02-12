@@ -1,7 +1,7 @@
 <html>
 	<body>
 		<svg id="svg" viewBox="-25 -25 50 50">
-			<circle style="stroke:grey;fill:none" r="24" x="0" y="0" />
+			<circle style="stroke:grey;stroke-width:0.3px;fill:none" r="24" x="0" y="0" />
 			<g id="opts"></g>
 			<g id="xf">
 				<path d="M-2 -2l2 18l2 -18 z" style="stroke:black;fill:red;stroke-width:0.5px;stroke-miterlimit:13;stroke-linejoin:miter" />
@@ -14,7 +14,7 @@
 
 			var svg = document.getElementById("svg")
 			var again = document.getElementById("nob")
-			w = Math.min(window.innerHeight - 20, window.innerWidth - 20)
+			w = Math.min(window.innerHeight - 40, window.innerWidth - 40)
 			svg.style.width = w
 			svg.style.height = w
 			svg.style.position = "absolute"
