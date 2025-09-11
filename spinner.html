@@ -5,16 +5,15 @@
 			<g id="opts"></g>
 			<g id="xf">
 				<path d="M-2 -2l2 18l2 -18 z" style="stroke:black;fill:red;stroke-width:0.5px;stroke-miterlimit:13;stroke-linejoin:miter" />
-				<!-- <rect style="stroke:black;fill:red" x="-2" y="-2" width="4" height="20" transform="rotate(0)" />	-->
 			</g>
 		</svg>
-		<button class="button button3" id="nob" style="position:absolute; top:2px"  onclick="rego()">Spin again</div>
+		<button class="button button3" id="nob" style="position:absolute; top:2px; font-size:2em"  onclick="rego()">Spin again</div>
 		
 		<script>
 
 			var svg = document.getElementById("svg")
 			var again = document.getElementById("nob")
-			w = Math.min(window.innerHeight - 40, window.innerWidth - 40)
+			w = Math.min(window.innerHeight - 100, window.innerWidth - 100)
 			svg.style.width = w
 			svg.style.height = w
 			svg.style.position = "absolute"
@@ -54,7 +53,6 @@
 				ln.setAttribute("id", `P${oo}`)
 				ln.setAttribute("pathLength", "100")
 			
-
 				ln.setAttribute("d", `M${lineoffset} 0h20`)
 				ln.setAttribute("style", "stroke:none")
 
@@ -74,14 +72,7 @@
 				gt2.setAttribute("transform", `rotate(${360*(oo-0.5)/options.length})`);
 				op.appendChild(gt)
 				op.appendChild(gt2)
-
-
-
-
-
-
 			}
-
 
 			function rot(r) {
 				var p=document.getElementById("xf")
@@ -98,11 +89,10 @@
 			}
 
 			function tick() {
-		//		alert(rr)
 				rot(rr)
 				rr = rr + vv
 				vv = vv * lag
-				if (vv<0.05) {
+				if (vv<0.01) {
 					vv = 0
 					again.removeAttribute("hidden")
 				}
