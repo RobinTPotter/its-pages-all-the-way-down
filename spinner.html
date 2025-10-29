@@ -22,6 +22,7 @@
 			again.style.top = w
 			again.style.left = (window.innerWidth - again.offsetWidth) / 2
 			var rr;
+			var angoff = Math.random() * 45;
 			var vv = 0;
 			var lag;
 			var NS = 'http://www.w3.org/2000/svg'
@@ -31,7 +32,7 @@
                       //  op.setAttribute("transform", `rotate(${Math.random()*90})`)
 			for (var oo=0; oo<options.length; oo++) {
 				
-				angle = Math.random() * 45 + 360*oo/options.length
+				angle = angoff + 360*oo/options.length
 				lineoffset = 0
 				anchor = "end"
 				startoffset = 100
@@ -70,7 +71,7 @@
 				gt2.appendChild(ln2)
 				gt.appendChild(text)
 				gt.setAttribute("transform", `rotate(${angle})`);
-				gt2.setAttribute("transform", `rotate(${360*(oo-0.5)/options.length})`);
+				gt2.setAttribute("transform", `rotate(${angoff + 360*(oo-0.5)/options.length})`);
 				op.appendChild(gt)
 				op.appendChild(gt2)
 			}
