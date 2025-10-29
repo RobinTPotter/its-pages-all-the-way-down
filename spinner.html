@@ -31,7 +31,7 @@
                       //  op.setAttribute("transform", `rotate(${Math.random()*90})`)
 			for (var oo=0; oo<options.length; oo++) {
 				
-				angle = 360*oo/options.length
+				angle = Math.random() * 45 + 360*oo/options.length
 				lineoffset = 0
 				anchor = "end"
 				startoffset = 100
