@@ -22,7 +22,7 @@
 			again.style.top = w
 			again.style.left = (window.innerWidth - again.offsetWidth) / 2
 			var rr;
-			var angoff = Math.random() * 45;
+			var angoff = Math.random() * 90;
 			var vv = 0;
 			var lag;
 			var NS = 'http://www.w3.org/2000/svg'
@@ -38,7 +38,7 @@
 				startoffset = 100
 				if (angle>90 && angle<270) {
 					angle = angle - 180
-					lineoffset = -20
+					lineoffset = -22 // was 20
 					anchor = "start"
 					startoffset = 0
 				}
@@ -55,7 +55,7 @@
 				ln.setAttribute("id", `P${oo}`)
 				ln.setAttribute("pathLength", "100")
 			
-				ln.setAttribute("d", `M${lineoffset} 0h20`)
+				ln.setAttribute("d", `M${lineoffset} 0h22`)  // was h20
 				ln.setAttribute("style", "stroke:none")
 
 				var text = document.createElementNS(NS,'text')
