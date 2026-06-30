@@ -156,6 +156,8 @@
   </label>
   <button style="margin-left: 12px;" onclick="openDataEditor()">Edit Data</button>
   <button style="margin-left: 12px;" onclick="openComponentEditor()">New Component (C)</button>
+  <button style="margin-left: 12px;" onclick="openHelpModal()">Help (?)</button>
+  <button style="margin-left: 12px; background-color: #ffcccc;" onclick="openClearModal()">Clear Board</button>
   <br><br>
 
   <svg id="board" width="900" height="600"></svg>
@@ -196,6 +198,12 @@
         <label for="newCompNets">Pin nets (optional, comma separated)</label>
         <input id="newCompNets" type="text" placeholder="N1,GND">
 
+        <label for="newCompColor">Color</label>
+        <input id="newCompColor" type="color" value="#add8e6">
+
+        <label for="newCompOpacity">Opacity (0..1)</label>
+        <input id="newCompOpacity" type="number" min="0" max="1" step="0.05" value="0.8">
+
         <label class="check-row" for="newCompSplitSides">
           <input id="newCompSplitSides" type="checkbox">
           Distribute legs on both sides (DIP style)
@@ -212,6 +220,70 @@
     </div>
   </div>
 
+  <div id="clearModal" class="modal-backdrop">
+    <div class="modal-panel" style="width:min(92vw,400px);height:auto;">
+      <h2>Clear Board?</h2>
+      <p style="color: #666; line-height: 1.5;">
+        This will permanently delete all components, jumpers, and cuts from the board. This action cannot be undone.
+      </p>
+      <div class="modal-actions">
+        <button onclick="closeClearModal()">Cancel</button>
+        <button style="background-color: #ff6666; color: white;" onclick="confirmClear()">Clear Everything</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="helpModal" class="modal-backdrop">
+    <div class="modal-panel" style="width:min(95vw,750px);">
+      <h2>Help & Instructions</h2>
+      <div style="overflow-y: auto; font-size: 13px; line-height: 1.6;">
+        <h3>Basic Controls</h3>
+        <ul>
+          <li><strong>Add Component (C):</strong> Press <code>C</code> or click the New Component button to create a new component with custom size, orientation, pins, labels, color, and opacity.</li>
+          <li><strong>Select Component:</strong> Click on any component body to select it (it becomes the "selected" component).</li>
+          <li><strong>Rotate (R):</strong> With a component selected, press <code>R</code> to rotate it 90° clockwise.</li>
+          <li><strong>Duplicate (D):</strong> With a component selected, press <code>D</code> to create a copy with an offset position.</li>
+          <li><strong>Delete:</strong> Hold Ctrl and click a component body to delete it.</li>
+          <li><strong>Drag Component:</strong> Click and drag a component to move all its pins together.</li>
+        </ul>
+
+        <h3>Jumpers & Connections</h3>
+        <ul>
+          <li><strong>Add Jumper:</strong> Hold Shift and click a hole to start a jumper, then click another hole to complete it.</li>
+          <li><strong>Move Jumper End:</strong> Drag the green handles on jumper endpoints to move them.</li>
+          <li><strong>Delete Jumper:</strong> Hold Ctrl and click on a jumper to delete it.</li>
+        </ul>
+
+        <h3>Cuts & Strip Isolation</h3>
+        <ul>
+          <li><strong>Add/Remove Cut:</strong> Hold Ctrl and click on a hole (anywhere, not on a component) to toggle a cut at that location. A cut breaks the copper strip horizontally.</li>
+        </ul>
+
+        <h3>Board Editing</h3>
+        <ul>
+          <li><strong>Edit Data (JSON):</strong> Click the Edit Data button to view and manually edit the entire board structure as JSON.</li>
+          <li><strong>Toggle Connectivity:</strong> Click Toggle Connectivity to highlight all connected regions on the board (helpful for debugging circuits).</li>
+          <li><strong>Label by Net:</strong> Check this box to display pin net names instead of pin IDs.</li>
+          <li><strong>Cuts on Top:</strong> Check this box to render cut marks above all other elements.</li>
+        </ul>
+
+        <h3>Example Workflow: Build a Simple LED Circuit</h3>
+        <ol>
+          <li><strong>Add a Battery:</strong> Press <code>C</code>, enter ID <code>BAT1</code>, keep size <code>1,3</code> and orientation <code>vertical</code>, pin labels <code>+,-</code>, nets <code>VCC,GND</code>. Click Add.</li>
+          <li><strong>Add a Resistor:</strong> Press <code>C</code>, enter ID <code>R1</code>, size <code>1,2</code>, labels <code>1,2</code>, nets <code>VCC,N1</code>. Click Add.</li>
+          <li><strong>Add an LED:</strong> Press <code>C</code>, enter ID <code>LED1</code>, size <code>1,2</code>, labels <code>A,C</code> (anode/cathode), nets <code>N1,GND</code>, pick a red color. Click Add.</li>
+          <li><strong>Place Components:</strong> Drag each component to a good position on the board.</li>
+          <li><strong>Add Jumpers:</strong> Hold Shift and click holes to connect: BAT1(+) → R1(1), R1(2) → LED1(A), LED1(C) → BAT1(-).</li>
+          <li><strong>Review:</strong> Click Toggle Connectivity to see the circuit path light up.</li>
+          <li><strong>Edit if Needed:</strong> Click Edit Data to tweak any values in JSON.</li>
+        </ol>
+      </div>
+      <div class="modal-actions">
+        <button onclick="closeHelpModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
   <script>
 
     let dragging = null;
@@ -221,6 +293,8 @@
     let labelPinsByNet = false;
 
     let selectedComponentId = null;
+
+    let lastInteraction = null;
 
     function snap(x, y) {
       const col = Math.round((x - 50) / spacing);
@@ -444,7 +518,11 @@
     const newCompSizeInput = document.getElementById("newCompSize");
     const newCompLabelsInput = document.getElementById("newCompLabels");
     const newCompNetsInput = document.getElementById("newCompNets");
+    const newCompColorInput = document.getElementById("newCompColor");
+    const newCompOpacityInput = document.getElementById("newCompOpacity");
     const newCompSplitSidesInput = document.getElementById("newCompSplitSides");
+    const clearModal = document.getElementById("clearModal");
+    const helpModal = document.getElementById("helpModal");
 
     // ---------------- HELPERS ----------------
 
@@ -557,9 +635,47 @@
       Object.assign(target, source);
     }
 
+    function findAndSelectInJSON(jsonText, searchType, searchId) {
+      let searchStr = '';
+      if (searchType === 'component') {
+        searchStr = `"id": "${searchId}"`;
+      } else if (searchType === 'jumper') {
+        return null; // harder to search for, skip for now
+      } else if (searchType === 'cut') {
+        return null;
+      }
+
+      if (!searchStr) return null;
+
+      const index = jsonText.indexOf(searchStr);
+      if (index === -1) return null;
+
+      let braceStart = jsonText.lastIndexOf('{', index);
+      let braceCount = 1;
+      let braceEnd = braceStart + 1;
+
+      while (braceCount > 0 && braceEnd < jsonText.length) {
+        if (jsonText[braceEnd] === '{') braceCount++;
+        if (jsonText[braceEnd] === '}') braceCount--;
+        braceEnd++;
+      }
+
+      return { start: braceStart, end: braceEnd };
+    }
+
     function openDataEditor() {
       dataEditor.value = JSON.stringify(getBoardDataSnapshot(), null, 4);
       dataModal.style.display = "flex";
+
+      if (lastInteraction) {
+        const range = findAndSelectInJSON(dataEditor.value, lastInteraction.type, lastInteraction.id);
+        if (range) {
+          dataEditor.setSelectionRange(range.start, range.end);
+          const lineNum = dataEditor.value.substring(0, range.start).split('\n').length;
+          dataEditor.scrollTop = (lineNum - 2) * 19 - dataEditor.clientHeight / 2;
+        }
+      }
+
       dataEditor.focus();
     }
 
@@ -614,11 +730,13 @@
 
     function openComponentEditor() {
       newCompIdInput.value = "";
-      newCompOrientationSelect.value = "horizontal";
+      newCompOrientationSelect.value = "vertical";
       newCompLegsInput.value = "2";
-      newCompSizeInput.value = "";
+      newCompSizeInput.value = "1,3";
       newCompLabelsInput.value = "";
       newCompNetsInput.value = "";
+      newCompColorInput.value = "#add8e6";
+      newCompOpacityInput.value = "0.8";
       newCompSplitSidesInput.checked = false;
       componentModal.style.display = "flex";
       newCompIdInput.focus();
@@ -626,6 +744,35 @@
 
     function closeComponentEditor() {
       componentModal.style.display = "none";
+    }
+
+    function openClearModal() {
+      clearModal.style.display = "flex";
+    }
+
+    function closeClearModal() {
+      clearModal.style.display = "none";
+    }
+
+    function confirmClear() {
+      boardData.components = [];
+      boardData.pins = {};
+      boardData.cuts = [];
+      boardData.jumpers = [];
+      selectedComponentId = null;
+      dragging = null;
+      creatingJumper = null;
+      lastInteraction = null;
+      closeClearModal();
+      render();
+    }
+
+    function openHelpModal() {
+      helpModal.style.display = "flex";
+    }
+
+    function closeHelpModal() {
+      helpModal.style.display = "none";
     }
 
     function parseCsvList(inputValue) {
@@ -761,6 +908,8 @@
       const splitSides = newCompSplitSidesInput.checked;
       const labels = parseCsvList(newCompLabelsInput.value);
       const nets = parseCsvList(newCompNetsInput.value);
+      const color = newCompColorInput.value;
+      const opacity = Number(newCompOpacityInput.value);
       let footprint;
 
       try {
@@ -782,6 +931,11 @@
 
       if (!Number.isInteger(legs) || legs < 2) {
         alert("Number of legs must be an integer >= 2.");
+        return;
+      }
+
+      if (!Number.isFinite(opacity) || opacity < 0 || opacity > 1) {
+        alert("Opacity must be between 0 and 1.");
         return;
       }
 
@@ -831,11 +985,14 @@
         orientation,
         splitSides,
         footprint: effectiveFootprint,
+        color,
+        opacity,
         pins
       });
       boardData.pins[compId] = pinMap;
 
       selectedComponentId = compId;
+      lastInteraction = { type: "component", id: compId };
       closeComponentEditor();
       render();
     }
@@ -849,6 +1006,18 @@
     componentModal.addEventListener("click", (e) => {
       if (e.target === componentModal) {
         closeComponentEditor();
+      }
+    });
+
+    clearModal.addEventListener("click", (e) => {
+      if (e.target === clearModal) {
+        closeClearModal();
+      }
+    });
+
+    helpModal.addEventListener("click", (e) => {
+      if (e.target === helpModal) {
+        closeHelpModal();
       }
     });
 
@@ -1170,6 +1339,21 @@
     function drawComponents() {
 
       labelPinsByNet = document.getElementById("labelByNet")?.checked ?? false;
+      const halfPitch = spacing / 2;
+      const minBodyThickness = 6;
+
+      function styleComponentBody(el, comp) {
+        if (typeof comp.color === "string" && comp.color.trim()) {
+          el.setAttribute("fill", comp.color);
+        }
+
+        if (Number.isFinite(Number(comp.opacity))) {
+          const op = Number(comp.opacity);
+          if (op >= 0 && op <= 1) {
+            el.setAttribute("opacity", String(op));
+          }
+        }
+      }
 
       boardData.components.forEach(comp => {
 
@@ -1180,7 +1364,7 @@
         }).filter(Boolean);
 
         // Render legacy DIP-8 style packages (two columns of four pins) as a chip body.
-        if (pins.length === 8 && !comp.footprint) {
+        if (pins.length === 8) {
           const colsUsed = [...new Set(pins.map(pin => pin.col))].sort((a, b) => a - b);
 
           if (colsUsed.length === 2) {
@@ -1192,11 +1376,11 @@
               .sort((a, b) => a.row - b.row);
 
             if (leftPins.length === 4 && rightPins.length === 4) {
-              const bodyLeft = leftPins[0].x + 8;
-              const bodyRight = rightPins[0].x - 8;
+              const bodyLeft = leftPins[0].x + halfPitch;
+              const bodyRight = rightPins[0].x - halfPitch;
               const allY = pins.map(pin => pin.y);
-              const top = Math.min(...allY) - 10;
-              const bottom = Math.max(...allY) + 10;
+              const top = Math.min(...allY) - halfPitch;
+              const bottom = Math.max(...allY) + halfPitch;
 
               leftPins.forEach(pin => {
                 svg.appendChild(create("line", {
@@ -1229,6 +1413,7 @@
 
               body.dataset.compId = comp.id;
               body.style.cursor = "grab";
+              styleComponentBody(body, comp);
               svg.appendChild(body);
 
               const notchX = (bodyLeft + bodyRight) / 2;
@@ -1275,39 +1460,19 @@
         const maxX = Math.max(...pins.map(pin => pin.x));
         const minY = Math.min(...pins.map(pin => pin.y));
         const maxY = Math.max(...pins.map(pin => pin.y));
-        const hasFootprint =
-          comp.footprint &&
-          Number.isInteger(comp.footprint.width) && comp.footprint.width >= 1 &&
-          Number.isInteger(comp.footprint.height) && comp.footprint.height >= 1;
-        const centerX = pins.reduce((sum, pin) => sum + pin.x, 0) / pins.length;
-        const centerY = pins.reduce((sum, pin) => sum + pin.y, 0) / pins.length;
-        const footprintBounds = hasFootprint
-          ? {
-            left: centerX - ((comp.footprint.width - 1) * spacing) / 2,
-            right: centerX + ((comp.footprint.width - 1) * spacing) / 2,
-            top: centerY - ((comp.footprint.height - 1) * spacing) / 2,
-            bottom: centerY + ((comp.footprint.height - 1) * spacing) / 2
-          }
-          : null;
 
         if (pins.length >= 4 && colsUsed.length === 2) {
           const leftX = pos(0, colsUsed[0]).x;
           const rightX = pos(0, colsUsed[1]).x;
-          let bodyLeft = leftX + 8;
-          let bodyRight = rightX - 8;
-          let bodyTop = minY - 10;
-          let bodyBottom = maxY + 10;
+          let bodyLeft = leftX + halfPitch;
+          let bodyRight = rightX - halfPitch;
+          let bodyTop = minY - halfPitch;
+          let bodyBottom = maxY + halfPitch;
 
-          if (footprintBounds) {
-            bodyLeft = footprintBounds.left + 8;
-            bodyRight = footprintBounds.right - 8;
-            bodyTop = footprintBounds.top - 10;
-            bodyBottom = footprintBounds.bottom + 10;
-          }
-
-          if (bodyRight - bodyLeft < 8) {
-            bodyLeft = leftX + 8;
-            bodyRight = rightX - 8;
+          if (bodyRight - bodyLeft < minBodyThickness) {
+            const mid = (leftX + rightX) / 2;
+            bodyLeft = mid - minBodyThickness / 2;
+            bodyRight = mid + minBodyThickness / 2;
           }
 
           pins.forEach(pin => {
@@ -1332,6 +1497,7 @@
 
           body.dataset.compId = comp.id;
           body.style.cursor = "grab";
+          styleComponentBody(body, comp);
           svg.appendChild(body);
 
           const notchX = (bodyLeft + bodyRight) / 2;
@@ -1371,21 +1537,15 @@
         if (pins.length >= 4 && rowsUsed.length === 2) {
           const topY = pos(rowsUsed[0], 0).y;
           const bottomY = pos(rowsUsed[1], 0).y;
-          let bodyTop = topY + 8;
-          let bodyBottom = bottomY - 8;
-          let bodyLeft = minX - 10;
-          let bodyRight = maxX + 10;
+          let bodyTop = topY + halfPitch;
+          let bodyBottom = bottomY - halfPitch;
+          let bodyLeft = minX - halfPitch;
+          let bodyRight = maxX + halfPitch;
 
-          if (footprintBounds) {
-            bodyTop = footprintBounds.top + 8;
-            bodyBottom = footprintBounds.bottom - 8;
-            bodyLeft = footprintBounds.left - 10;
-            bodyRight = footprintBounds.right + 10;
-          }
-
-          if (bodyBottom - bodyTop < 8) {
-            bodyTop = topY + 8;
-            bodyBottom = bottomY - 8;
+          if (bodyBottom - bodyTop < minBodyThickness) {
+            const mid = (topY + bottomY) / 2;
+            bodyTop = mid - minBodyThickness / 2;
+            bodyBottom = mid + minBodyThickness / 2;
           }
 
           pins.forEach(pin => {
@@ -1410,6 +1570,7 @@
 
           body.dataset.compId = comp.id;
           body.style.cursor = "grab";
+          styleComponentBody(body, comp);
           svg.appendChild(body);
 
           const notchX = (bodyLeft + bodyRight) / 2;
@@ -1459,10 +1620,7 @@
         const midX = (p1.x + p2.x) / 2;
         const midY = (p1.y + p2.y) / 2;
 
-        const footprintSpan = hasFootprint
-          ? (horizontal ? (comp.footprint.width - 1) * spacing : (comp.footprint.height - 1) * spacing)
-          : 0;
-        const bodyLength = Math.max(25, length * 0.4, footprintSpan);
+        const bodyLength = Math.max(25, length - spacing);
         const bodyThickness = 12;
         const half = bodyLength / 2;
 
@@ -1500,6 +1658,7 @@
 
         body.dataset.compId = comp.id;
         body.style.cursor = "grab";
+        styleComponentBody(body, comp);
 
         svg.appendChild(body);
 
@@ -1556,9 +1715,11 @@
 
       if (compId) {
         selectedComponentId = compId;
+        lastInteraction = { type: "component", id: compId };
         dragging = { type: "component", compId };
       }
       else if (jumperIndex !== undefined) {
+        lastInteraction = { type: "jumper", id: Number(jumperIndex) };
         dragging = {
           type: "jumper-end",
           index: Number(jumperIndex),
@@ -1566,6 +1727,7 @@
         };
       }
       else if (cutIndex !== undefined) {
+        lastInteraction = { type: "cut", id: Number(cutIndex) };
         dragging = { type: "cut", index: Number(cutIndex) };
       }
     });
