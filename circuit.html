@@ -103,6 +103,43 @@
       justify-content: flex-end;
       gap: 8px;
     }
+
+    .component-form {
+      display: grid;
+      grid-template-columns: 170px 1fr;
+      gap: 10px 12px;
+      align-items: center;
+      font-size: 14px;
+    }
+
+    .component-form input,
+    .component-form select {
+      font-size: 14px;
+      padding: 6px 8px;
+      border: 1px solid #bbb;
+      border-radius: 4px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .component-form .hint {
+      grid-column: 1 / -1;
+      color: #666;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .component-form .check-row {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .component-form .check-row input {
+      width: auto;
+      margin: 0;
+    }
   </style>
 </head>
 
@@ -118,6 +155,7 @@
     Cuts on top
   </label>
   <button style="margin-left: 12px;" onclick="openDataEditor()">Edit Data</button>
+  <button style="margin-left: 12px;" onclick="openComponentEditor()">New Component (C)</button>
   <br><br>
 
   <svg id="board" width="900" height="600"></svg>
@@ -129,6 +167,47 @@
       <div class="modal-actions">
         <button onclick="closeDataEditor()">Cancel</button>
         <button onclick="applyDataEditor()">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="componentModal" class="modal-backdrop">
+    <div class="modal-panel" style="width:min(92vw,560px);height:auto;">
+      <h2>Add Component</h2>
+      <div class="component-form">
+        <label for="newCompId">Component ID</label>
+        <input id="newCompId" type="text" placeholder="R2, U1, LED2">
+
+        <label for="newCompOrientation">Orientation</label>
+        <select id="newCompOrientation">
+          <option value="horizontal">Horizontal</option>
+          <option value="vertical">Vertical</option>
+        </select>
+
+        <label for="newCompLegs">Number of legs</label>
+        <input id="newCompLegs" type="number" min="2" max="25" value="2">
+
+        <label for="newCompSize">Size (cols,rows)</label>
+        <input id="newCompSize" type="text" placeholder="1,6 or 6,1">
+
+        <label for="newCompLabels">Pin labels (comma separated)</label>
+        <input id="newCompLabels" type="text" placeholder="1,2 or A,C or VCC,GND">
+
+        <label for="newCompNets">Pin nets (optional, comma separated)</label>
+        <input id="newCompNets" type="text" placeholder="N1,GND">
+
+        <label class="check-row" for="newCompSplitSides">
+          <input id="newCompSplitSides" type="checkbox">
+          Distribute legs on both sides (DIP style)
+        </label>
+
+        <div class="hint">
+          Size controls footprint width/height in board holes. Split mode places pins on opposite sides like the 555.
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button onclick="closeComponentEditor()">Cancel</button>
+        <button onclick="applyComponentEditor()">Add</button>
       </div>
     </div>
   </div>
@@ -358,6 +437,14 @@
     const svg = document.getElementById("board");
     const dataModal = document.getElementById("dataModal");
     const dataEditor = document.getElementById("dataEditor");
+    const componentModal = document.getElementById("componentModal");
+    const newCompIdInput = document.getElementById("newCompId");
+    const newCompOrientationSelect = document.getElementById("newCompOrientation");
+    const newCompLegsInput = document.getElementById("newCompLegs");
+    const newCompSizeInput = document.getElementById("newCompSize");
+    const newCompLabelsInput = document.getElementById("newCompLabels");
+    const newCompNetsInput = document.getElementById("newCompNets");
+    const newCompSplitSidesInput = document.getElementById("newCompSplitSides");
 
     // ---------------- HELPERS ----------------
 
@@ -408,6 +495,57 @@
           col: Math.max(0, Math.min(cols - 1, Math.round(newCol)))
         };
       });
+    }
+
+    function buildUniqueComponentId(baseId) {
+      const existing = new Set(boardData.components.map(c => c.id));
+      if (!existing.has(baseId)) return baseId;
+
+      let i = 2;
+      while (existing.has(`${baseId}_${i}`)) i++;
+      return `${baseId}_${i}`;
+    }
+
+    function duplicateSelectedComponent() {
+      if (!selectedComponentId) return;
+
+      const sourceComp = boardData.components.find(c => c.id === selectedComponentId);
+      const sourcePins = boardData.pins[selectedComponentId];
+      if (!sourceComp || !sourcePins) return;
+
+      const newId = buildUniqueComponentId(`${sourceComp.id}_copy`);
+
+      const coords = sourceComp.pins
+        .map(pin => sourcePins[pin.id])
+        .filter(Boolean);
+
+      if (coords.length === 0) return;
+
+      const canOffsetPos = coords.every(p => p.row < rows - 1 && p.col < cols - 1);
+      const canOffsetNeg = coords.every(p => p.row > 0 && p.col > 0);
+      const d = canOffsetPos ? 1 : (canOffsetNeg ? -1 : 0);
+
+      const newComp = {
+        ...sourceComp,
+        id: newId,
+        pins: sourceComp.pins.map(pin => ({ ...pin })),
+        footprint: sourceComp.footprint ? { ...sourceComp.footprint } : sourceComp.footprint
+      };
+
+      const newPinMap = {};
+      sourceComp.pins.forEach(pin => {
+        const p = sourcePins[pin.id];
+        if (!p) return;
+        newPinMap[pin.id] = {
+          row: Math.max(0, Math.min(rows - 1, p.row + d)),
+          col: Math.max(0, Math.min(cols - 1, p.col + d))
+        };
+      });
+
+      boardData.components.push(newComp);
+      boardData.pins[newId] = newPinMap;
+      selectedComponentId = newId;
+      render();
     }
 
     function getBoardDataSnapshot() {
@@ -474,19 +612,262 @@
       render();
     }
 
+    function openComponentEditor() {
+      newCompIdInput.value = "";
+      newCompOrientationSelect.value = "horizontal";
+      newCompLegsInput.value = "2";
+      newCompSizeInput.value = "";
+      newCompLabelsInput.value = "";
+      newCompNetsInput.value = "";
+      newCompSplitSidesInput.checked = false;
+      componentModal.style.display = "flex";
+      newCompIdInput.focus();
+    }
+
+    function closeComponentEditor() {
+      componentModal.style.display = "none";
+    }
+
+    function parseCsvList(inputValue) {
+      return String(inputValue || "")
+        .split(",")
+        .map(x => x.trim())
+        .filter(Boolean);
+    }
+
+    function parseSizeInput(sizeText) {
+      const cleaned = String(sizeText || "").trim();
+      if (!cleaned) return { width: null, height: null };
+
+      const parts = cleaned.split(",").map(x => x.trim());
+      if (parts.length !== 2) {
+        throw new Error("Size must be in cols,rows format like 1,6 or 6,1.");
+      }
+
+      const width = Number(parts[0]);
+      const height = Number(parts[1]);
+
+      if (!Number.isInteger(width) || !Number.isInteger(height) || width < 1 || height < 1) {
+        throw new Error("Size values must be positive integers.");
+      }
+
+      return { width, height };
+    }
+
+    function buildLinearPinPositions(legs, orientation, footprint) {
+      const centerRow = Math.floor(rows / 2);
+      const centerCol = Math.floor(cols / 2);
+
+      const requestedSpan = orientation === "vertical"
+        ? ((footprint && footprint.height) || legs)
+        : ((footprint && footprint.width) || legs);
+
+      const span = Math.max(legs, requestedSpan);
+      const offset = Math.floor((span - 1) / 2);
+
+      const points = [];
+      for (let i = 0; i < legs; i++) {
+        const t = legs === 1 ? 0 : i / (legs - 1);
+        const lineOffset = Math.round((span - 1) * t) - offset;
+
+        if (orientation === "vertical") {
+          points.push({
+            row: Math.max(0, Math.min(rows - 1, centerRow + lineOffset)),
+            col: centerCol
+          });
+        } else {
+          points.push({
+            row: centerRow,
+            col: Math.max(0, Math.min(cols - 1, centerCol + lineOffset))
+          });
+        }
+      }
+
+      return points;
+    }
+
+    function buildSplitPinPositions(legs, orientation, footprint) {
+      const centerRow = Math.floor(rows / 2);
+      const centerCol = Math.floor(cols / 2);
+
+      const pinsPerSideA = Math.ceil(legs / 2);
+      const pinsPerSideB = Math.floor(legs / 2);
+
+      const width = (footprint && footprint.width) || 2;
+      const height = (footprint && footprint.height) || Math.max(pinsPerSideA, pinsPerSideB);
+
+      function distributedOffsets(count, span) {
+        const safeSpan = Math.max(1, span);
+        if (count <= 1) return [Math.floor((safeSpan - 1) / 2)];
+
+        const offsets = [];
+        for (let i = 0; i < count; i++) {
+          offsets.push(Math.round((i * (safeSpan - 1)) / (count - 1)));
+        }
+        return offsets;
+      }
+
+      const points = [];
+
+      if (orientation === "vertical") {
+        const leftCol = Math.max(0, Math.min(cols - 1, centerCol - Math.floor((width - 1) / 2)));
+        const rightCol = Math.max(0, Math.min(cols - 1, leftCol + (width - 1)));
+        const topRow = centerRow - Math.floor((height - 1) / 2);
+        const leftOffsets = distributedOffsets(pinsPerSideA, height);
+        const rightOffsets = distributedOffsets(pinsPerSideB, height);
+
+        for (let i = 0; i < leftOffsets.length; i++) {
+          points.push({
+            row: Math.max(0, Math.min(rows - 1, topRow + leftOffsets[i])),
+            col: leftCol
+          });
+        }
+
+        for (let i = 0; i < rightOffsets.length; i++) {
+          points.push({
+            row: Math.max(0, Math.min(rows - 1, topRow + rightOffsets[i])),
+            col: rightCol
+          });
+        }
+      } else {
+        const topRow = Math.max(0, Math.min(rows - 1, centerRow - Math.floor((height - 1) / 2)));
+        const bottomRow = Math.max(0, Math.min(rows - 1, topRow + (height - 1)));
+        const leftCol = centerCol - Math.floor((width - 1) / 2);
+        const topOffsets = distributedOffsets(pinsPerSideA, width);
+        const bottomOffsets = distributedOffsets(pinsPerSideB, width);
+
+        for (let i = 0; i < topOffsets.length; i++) {
+          points.push({
+            row: topRow,
+            col: Math.max(0, Math.min(cols - 1, leftCol + topOffsets[i]))
+          });
+        }
+
+        for (let i = 0; i < bottomOffsets.length; i++) {
+          points.push({
+            row: bottomRow,
+            col: Math.max(0, Math.min(cols - 1, leftCol + bottomOffsets[i]))
+          });
+        }
+      }
+
+      return points;
+    }
+
+    function applyComponentEditor() {
+      const compId = newCompIdInput.value.trim();
+      const orientation = newCompOrientationSelect.value;
+      const legs = Number(newCompLegsInput.value);
+      const splitSides = newCompSplitSidesInput.checked;
+      const labels = parseCsvList(newCompLabelsInput.value);
+      const nets = parseCsvList(newCompNetsInput.value);
+      let footprint;
+
+      try {
+        footprint = parseSizeInput(newCompSizeInput.value);
+      } catch (err) {
+        alert(err.message);
+        return;
+      }
+
+      if (!compId) {
+        alert("Component ID is required.");
+        return;
+      }
+
+      if (boardData.components.some(c => c.id === compId)) {
+        alert(`Component ID '${compId}' already exists.`);
+        return;
+      }
+
+      if (!Number.isInteger(legs) || legs < 2) {
+        alert("Number of legs must be an integer >= 2.");
+        return;
+      }
+
+      const maxLegs = orientation === "vertical" ? rows : cols;
+      if (legs > maxLegs) {
+        alert(`Too many legs for ${orientation} placement. Max is ${maxLegs}.`);
+        return;
+      }
+
+      if (splitSides && legs < 4) {
+        alert("Split mode needs at least 4 legs.");
+        return;
+      }
+
+      if (splitSides && (footprint.width || 2) < 2 && orientation === "vertical") {
+        alert("Split vertical mode needs size width >= 2 (for two sides).");
+        return;
+      }
+
+      if (splitSides && (footprint.height || 2) < 2 && orientation === "horizontal") {
+        alert("Split horizontal mode needs size height >= 2 (for two sides).");
+        return;
+      }
+
+      const pinsPerSideA = Math.ceil(legs / 2);
+      const pinsPerSideB = Math.floor(legs / 2);
+      const effectiveFootprint = {
+        width: footprint.width || (splitSides ? (orientation === "vertical" ? 2 : Math.max(pinsPerSideA, pinsPerSideB)) : (orientation === "horizontal" ? legs : 1)),
+        height: footprint.height || (splitSides ? (orientation === "vertical" ? Math.max(pinsPerSideA, pinsPerSideB) : 2) : (orientation === "vertical" ? legs : 1))
+      };
+
+      const pinPositions = splitSides
+        ? buildSplitPinPositions(legs, orientation, footprint)
+        : buildLinearPinPositions(legs, orientation, footprint);
+      const pins = [];
+      const pinMap = {};
+
+      for (let i = 0; i < legs; i++) {
+        const pinId = labels[i] || String(i + 1);
+        pins.push({ id: pinId, net: nets[i] || "" });
+        pinMap[pinId] = pinPositions[i];
+      }
+
+      boardData.components.push({
+        id: compId,
+        canRotate: true,
+        orientation,
+        splitSides,
+        footprint: effectiveFootprint,
+        pins
+      });
+      boardData.pins[compId] = pinMap;
+
+      selectedComponentId = compId;
+      closeComponentEditor();
+      render();
+    }
+
     dataModal.addEventListener("click", (e) => {
       if (e.target === dataModal) {
         closeDataEditor();
       }
     });
 
+    componentModal.addEventListener("click", (e) => {
+      if (e.target === componentModal) {
+        closeComponentEditor();
+      }
+    });
+
     window.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && dataModal.style.display === "flex") {
-        closeDataEditor();
-        return;
+      if (e.key === "Escape") {
+        if (dataModal.style.display === "flex") {
+          closeDataEditor();
+          return;
+        }
+
+        if (componentModal.style.display === "flex") {
+          closeComponentEditor();
+          return;
+        }
       }
 
-      if (dataModal.style.display === "flex") return;
+      if (dataModal.style.display === "flex" || componentModal.style.display === "flex") {
+        return;
+      }
 
       const active = document.activeElement;
       const isTextInput =
@@ -503,6 +884,18 @@
         e.preventDefault();
         rotateComponentClockwise(selectedComponentId);
         render();
+        return;
+      }
+
+      if (e.key === "d" || e.key === "D") {
+        e.preventDefault();
+        duplicateSelectedComponent();
+        return;
+      }
+
+      if (e.key === "c" || e.key === "C") {
+        e.preventDefault();
+        openComponentEditor();
       }
     });
 
@@ -786,8 +1179,8 @@
           return { ...pin, ...pos(pl.row, pl.col), row: pl.row, col: pl.col };
         }).filter(Boolean);
 
-        // Render DIP-8 style packages (two columns of four pins) as a chip body.
-        if (pins.length === 8) {
+        // Render legacy DIP-8 style packages (two columns of four pins) as a chip body.
+        if (pins.length === 8 && !comp.footprint) {
           const colsUsed = [...new Set(pins.map(pin => pin.col))].sort((a, b) => a - b);
 
           if (colsUsed.length === 2) {
@@ -876,8 +1269,185 @@
 
         if (pins.length < 2) return;
 
-        const p1 = pins[0];
-        const p2 = pins[1];
+        const colsUsed = [...new Set(pins.map(pin => pin.col))].sort((a, b) => a - b);
+        const rowsUsed = [...new Set(pins.map(pin => pin.row))].sort((a, b) => a - b);
+        const minX = Math.min(...pins.map(pin => pin.x));
+        const maxX = Math.max(...pins.map(pin => pin.x));
+        const minY = Math.min(...pins.map(pin => pin.y));
+        const maxY = Math.max(...pins.map(pin => pin.y));
+        const hasFootprint =
+          comp.footprint &&
+          Number.isInteger(comp.footprint.width) && comp.footprint.width >= 1 &&
+          Number.isInteger(comp.footprint.height) && comp.footprint.height >= 1;
+        const centerX = pins.reduce((sum, pin) => sum + pin.x, 0) / pins.length;
+        const centerY = pins.reduce((sum, pin) => sum + pin.y, 0) / pins.length;
+        const footprintBounds = hasFootprint
+          ? {
+            left: centerX - ((comp.footprint.width - 1) * spacing) / 2,
+            right: centerX + ((comp.footprint.width - 1) * spacing) / 2,
+            top: centerY - ((comp.footprint.height - 1) * spacing) / 2,
+            bottom: centerY + ((comp.footprint.height - 1) * spacing) / 2
+          }
+          : null;
+
+        if (pins.length >= 4 && colsUsed.length === 2) {
+          const leftX = pos(0, colsUsed[0]).x;
+          const rightX = pos(0, colsUsed[1]).x;
+          let bodyLeft = leftX + 8;
+          let bodyRight = rightX - 8;
+          let bodyTop = minY - 10;
+          let bodyBottom = maxY + 10;
+
+          if (footprintBounds) {
+            bodyLeft = footprintBounds.left + 8;
+            bodyRight = footprintBounds.right - 8;
+            bodyTop = footprintBounds.top - 10;
+            bodyBottom = footprintBounds.bottom + 10;
+          }
+
+          if (bodyRight - bodyLeft < 8) {
+            bodyLeft = leftX + 8;
+            bodyRight = rightX - 8;
+          }
+
+          pins.forEach(pin => {
+            const isLeft = pin.col === colsUsed[0];
+            svg.appendChild(create("line", {
+              x1: pin.x,
+              y1: pin.y,
+              x2: isLeft ? bodyLeft : bodyRight,
+              y2: pin.y,
+              class: "lead"
+            }));
+          });
+
+          const body = create("rect", {
+            x: bodyLeft,
+            y: bodyTop,
+            width: bodyRight - bodyLeft,
+            height: bodyBottom - bodyTop,
+            rx: 4,
+            class: "component"
+          });
+
+          body.dataset.compId = comp.id;
+          body.style.cursor = "grab";
+          svg.appendChild(body);
+
+          const notchX = (bodyLeft + bodyRight) / 2;
+          svg.appendChild(create("circle", {
+            cx: notchX,
+            cy: bodyTop + 5,
+            r: 2.5,
+            fill: "black"
+          }));
+
+          svg.appendChild(create("text", {
+            x: notchX,
+            y: bodyTop - 6,
+            class: "label"
+          })).textContent = comp.id;
+
+          pins.forEach(pin => {
+            svg.appendChild(create("circle", {
+              cx: pin.x,
+              cy: pin.y,
+              r: 5,
+              class: "pin"
+            }));
+
+            const isLeft = pin.col === colsUsed[0];
+            svg.appendChild(create("text", {
+              x: isLeft ? pin.x - 8 : pin.x + 8,
+              y: pin.y - 8,
+              class: "label",
+              "text-anchor": isLeft ? "end" : "start"
+            })).textContent = labelPinsByNet ? (pin.net || pin.id) : pin.id;
+          });
+
+          return;
+        }
+
+        if (pins.length >= 4 && rowsUsed.length === 2) {
+          const topY = pos(rowsUsed[0], 0).y;
+          const bottomY = pos(rowsUsed[1], 0).y;
+          let bodyTop = topY + 8;
+          let bodyBottom = bottomY - 8;
+          let bodyLeft = minX - 10;
+          let bodyRight = maxX + 10;
+
+          if (footprintBounds) {
+            bodyTop = footprintBounds.top + 8;
+            bodyBottom = footprintBounds.bottom - 8;
+            bodyLeft = footprintBounds.left - 10;
+            bodyRight = footprintBounds.right + 10;
+          }
+
+          if (bodyBottom - bodyTop < 8) {
+            bodyTop = topY + 8;
+            bodyBottom = bottomY - 8;
+          }
+
+          pins.forEach(pin => {
+            const isTop = pin.row === rowsUsed[0];
+            svg.appendChild(create("line", {
+              x1: pin.x,
+              y1: pin.y,
+              x2: pin.x,
+              y2: isTop ? bodyTop : bodyBottom,
+              class: "lead"
+            }));
+          });
+
+          const body = create("rect", {
+            x: bodyLeft,
+            y: bodyTop,
+            width: bodyRight - bodyLeft,
+            height: bodyBottom - bodyTop,
+            rx: 4,
+            class: "component"
+          });
+
+          body.dataset.compId = comp.id;
+          body.style.cursor = "grab";
+          svg.appendChild(body);
+
+          const notchX = (bodyLeft + bodyRight) / 2;
+          svg.appendChild(create("circle", {
+            cx: notchX,
+            cy: bodyTop + 5,
+            r: 2.5,
+            fill: "black"
+          }));
+
+          svg.appendChild(create("text", {
+            x: notchX,
+            y: bodyTop - 6,
+            class: "label"
+          })).textContent = comp.id;
+
+          pins.forEach(pin => {
+            svg.appendChild(create("circle", {
+              cx: pin.x,
+              cy: pin.y,
+              r: 5,
+              class: "pin"
+            }));
+
+            svg.appendChild(create("text", {
+              x: pin.x,
+              y: pin.row === rowsUsed[0] ? pin.y - 8 : pin.y + 14,
+              class: "label"
+            })).textContent = labelPinsByNet ? (pin.net || pin.id) : pin.id;
+          });
+
+          return;
+        }
+
+        const horizontal = (maxX - minX) >= (maxY - minY);
+        const orderedPins = [...pins].sort((a, b) => horizontal ? (a.x - b.x) : (a.y - b.y));
+        const p1 = orderedPins[0];
+        const p2 = orderedPins[orderedPins.length - 1];
 
         const dx = p2.x - p1.x;
         const dy = p2.y - p1.y;
@@ -889,7 +1459,10 @@
         const midX = (p1.x + p2.x) / 2;
         const midY = (p1.y + p2.y) / 2;
 
-        const bodyLength = Math.max(25, length * 0.4);
+        const footprintSpan = hasFootprint
+          ? (horizontal ? (comp.footprint.width - 1) * spacing : (comp.footprint.height - 1) * spacing)
+          : 0;
+        const bodyLength = Math.max(25, length * 0.4, footprintSpan);
         const bodyThickness = 12;
         const half = bodyLength / 2;
 
@@ -916,7 +1489,6 @@
           class: "lead"
         }));
 
-        // âœ… FIX: create body ONCE and attach drag behaviour here
         const body = create("rect", {
           x: -half,
           y: -bodyThickness / 2,
@@ -926,7 +1498,6 @@
           transform: `translate(${midX},${midY}) rotate(${angleDeg})`
         });
 
-        // âœ… attach drag metadata here (INSIDE loop)
         body.dataset.compId = comp.id;
         body.style.cursor = "grab";
 
@@ -1047,6 +1618,20 @@
 
       // Ctrl+click: toggle a cut at this hole
       if (e.ctrlKey) {
+        const compId = e.target.dataset.compId;
+        if (compId) {
+          const compIndex = boardData.components.findIndex(c => c.id === compId);
+          if (compIndex >= 0) {
+            boardData.components.splice(compIndex, 1);
+            delete boardData.pins[compId];
+            if (selectedComponentId === compId) {
+              selectedComponentId = null;
+            }
+            render();
+            return;
+          }
+        }
+
         const jumperIndex = e.target.dataset.jumperIndex;
         if (jumperIndex !== undefined) {
           boardData.jumpers.splice(Number(jumperIndex), 1);
