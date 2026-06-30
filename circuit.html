@@ -1,0 +1,1104 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>Stripboard Demo (Connectivity Fixed)</title>
+  <style>
+    svg {
+      border: 1px solid #ccc;
+      background: #fafafa;
+    }
+
+    .strip {
+      stroke: gold;
+      stroke-width: 6;
+    }
+
+    .hole {
+      fill: black;
+    }
+
+    .cut {
+      stroke: black;
+      stroke-width: 3;
+    }
+
+    .component {
+      fill: lightblue;
+      opacity: 0.8;
+      stroke: black;
+    }
+
+    .pin {
+      fill: red;
+    }
+
+    .lead {
+      stroke: black;
+      stroke-width: 2;
+    }
+
+    .jumper {
+      stroke: green;
+      stroke-width: 3;
+      stroke-linecap: round;
+    }
+
+    .label {
+      font-size: 10px;
+      text-anchor: middle;
+    }
+
+    .overlay {
+      fill: rgba(0, 0, 255, 0.08);
+      filter: blur(3px);
+      pointer-events: none;
+    }
+
+    body {
+      user-select: none;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.55);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal-panel {
+      width: min(95vw, 1100px);
+      height: min(90vh, 850px);
+      background: white;
+      border: 1px solid #bbb;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .modal-panel h2 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    #dataEditor {
+      flex: 1;
+      width: 100%;
+      resize: none;
+      font-family: Consolas, monospace;
+      font-size: 14px;
+      line-height: 1.35;
+      padding: 10px;
+      box-sizing: border-box;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <button onclick="toggleOverlay()">Toggle Connectivity</button>
+  <label style="margin-left: 12px; font-size: 14px;">
+    <input id="labelByNet" type="checkbox" onchange="render()">
+    Label pins by net
+  </label>
+  <label style="margin-left: 12px; font-size: 14px;">
+    <input id="cutsOnTop" type="checkbox" onchange="render()">
+    Cuts on top
+  </label>
+  <button style="margin-left: 12px;" onclick="openDataEditor()">Edit Data</button>
+  <br><br>
+
+  <svg id="board" width="900" height="600"></svg>
+
+  <div id="dataModal" class="modal-backdrop">
+    <div class="modal-panel">
+      <h2>Board Data JSON</h2>
+      <textarea id="dataEditor" spellcheck="false"></textarea>
+      <div class="modal-actions">
+        <button onclick="closeDataEditor()">Cancel</button>
+        <button onclick="applyDataEditor()">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+
+    let dragging = null;
+
+    let creatingJumper = null;
+
+    let labelPinsByNet = false;
+
+    let selectedComponentId = null;
+
+    function snap(x, y) {
+      const col = Math.round((x - 50) / spacing);
+      const row = Math.round((y - 50) / spacing);
+
+      return {
+        row: Math.max(0, Math.min(rows - 1, row)),
+        col: Math.max(0, Math.min(cols - 1, col))
+      };
+    }
+
+    // ---------------- DATA ----------------
+
+    const boardData = {
+    "components": [
+        {
+            "id": "BAT1",
+            "pins": [
+                {
+                    "id": "+",
+                    "net": "VCC"
+                },
+                {
+                    "id": "-",
+                    "net": "GND"
+                }
+            ]
+        },
+        {
+            "id": "R1",
+            "pins": [
+                {
+                    "id": "1",
+                    "net": "VCC"
+                },
+                {
+                    "id": "2",
+                    "net": "N1"
+                }
+            ]
+        },
+        {
+            "id": "LED1",
+            "pins": [
+                {
+                    "id": "A",
+                    "net": "N1"
+                },
+                {
+                    "id": "C",
+                    "net": "GND"
+                }
+            ]
+        },
+        {
+            "id": "555",
+            "canRotate": false,
+            "pins": [
+                {
+                    "id": "1",
+                    "net": "GND"
+                },
+                {
+                    "id": "2",
+                    "net": "TRIG"
+                },
+                {
+                    "id": "3",
+                    "net": "OUT"
+                },
+                {
+                    "id": "4",
+                    "net": "RESET"
+                },
+                {
+                    "id": "5",
+                    "net": "CTRL"
+                },
+                {
+                    "id": "6",
+                    "net": "THRESH"
+                },
+                {
+                    "id": "7",
+                    "net": "DISCH"
+                },
+                {
+                    "id": "8",
+                    "net": "VCC"
+                }
+            ]
+        }
+    ],
+    "pins": {
+        "555": {
+            "1": {
+                "row": 5,
+                "col": 13
+            },
+            "2": {
+                "row": 6,
+                "col": 13
+            },
+            "3": {
+                "row": 7,
+                "col": 13
+            },
+            "4": {
+                "row": 8,
+                "col": 13
+            },
+            "5": {
+                "row": 8,
+                "col": 16
+            },
+            "6": {
+                "row": 7,
+                "col": 16
+            },
+            "7": {
+                "row": 6,
+                "col": 16
+            },
+            "8": {
+                "row": 5,
+                "col": 16
+            }
+        },
+        "BAT1": {
+            "+": {
+                "row": 0,
+                "col": 3
+            },
+            "-": {
+                "row": 14,
+                "col": 3
+            }
+        },
+        "R1": {
+            "1": {
+                "row": 0,
+                "col": 6
+            },
+            "2": {
+                "row": 2,
+                "col": 6
+            }
+        },
+        "LED1": {
+            "A": {
+                "row": 11,
+                "col": 6
+            },
+            "C": {
+                "row": 14,
+                "col": 6
+            }
+        }
+    },
+    "cuts": [
+        {
+            "row": 5,
+            "col": 14
+        },
+        {
+            "row": 6,
+            "col": 14
+        },
+        {
+            "row": 7,
+            "col": 14
+        },
+        {
+            "row": 8,
+            "col": 14
+        },
+        {
+            "row": 5,
+            "col": 10
+        },
+        {
+            "row": 6,
+            "col": 10
+        },
+        {
+            "row": 7,
+            "col": 10
+        },
+        {
+            "row": 8,
+            "col": 10
+        }
+    ],
+    "jumpers": [
+        {
+            "from": {
+                "row": 2,
+                "col": 7
+            },
+            "to": {
+                "row": 11,
+                "col": 7
+            }
+        }
+    ]
+};
+
+    // ---------------- CONFIG ----------------
+
+    const rows = 15;
+    const cols = 25;
+    const spacing = 25;
+
+    const svg = document.getElementById("board");
+    const dataModal = document.getElementById("dataModal");
+    const dataEditor = document.getElementById("dataEditor");
+
+    // ---------------- HELPERS ----------------
+
+    function create(tag, attrs) {
+      const el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+      for (let k in attrs) el.setAttribute(k, attrs[k]);
+      return el;
+    }
+
+    function pos(row, col) {
+      return {
+        x: col * spacing + 50,
+        y: row * spacing + 50
+      };
+    }
+
+    function key(r, c) {
+      return `${r},${c}`;
+    }
+
+    function rotateComponentClockwise(compId) {
+      const comp = boardData.components.find(c => c.id === compId);
+      const pinMap = boardData.pins[compId];
+      if (!comp || !pinMap) return;
+      if (comp.canRotate === false) return;
+
+      const coords = comp.pins
+        .map(pin => pinMap[pin.id])
+        .filter(Boolean);
+
+      if (coords.length < 2) return;
+
+      const centerRow = coords.reduce((sum, p) => sum + p.row, 0) / coords.length;
+      const centerCol = coords.reduce((sum, p) => sum + p.col, 0) / coords.length;
+
+      comp.pins.forEach(pin => {
+        const p = pinMap[pin.id];
+        if (!p) return;
+
+        const relRow = p.row - centerRow;
+        const relCol = p.col - centerCol;
+
+        const newRow = centerRow - relCol;
+        const newCol = centerCol + relRow;
+
+        pinMap[pin.id] = {
+          row: Math.max(0, Math.min(rows - 1, Math.round(newRow))),
+          col: Math.max(0, Math.min(cols - 1, Math.round(newCol)))
+        };
+      });
+    }
+
+    function getBoardDataSnapshot() {
+      return boardData;
+    }
+
+    function replaceObject(target, source) {
+      Object.keys(target).forEach(k => delete target[k]);
+      Object.assign(target, source);
+    }
+
+    function openDataEditor() {
+      dataEditor.value = JSON.stringify(getBoardDataSnapshot(), null, 4);
+      dataModal.style.display = "flex";
+      dataEditor.focus();
+    }
+
+    function closeDataEditor() {
+      dataModal.style.display = "none";
+    }
+
+    function applyDataEditor() {
+      let parsed;
+
+      try {
+        parsed = JSON.parse(dataEditor.value);
+      } catch (err) {
+        alert(`Invalid JSON: ${err.message}`);
+        return;
+      }
+
+      if (!parsed || typeof parsed !== "object") {
+        alert("Data must be a JSON object.");
+        return;
+      }
+
+      if (!Array.isArray(parsed.components)) {
+        alert("components must be an array.");
+        return;
+      }
+
+      if (!parsed.pins || typeof parsed.pins !== "object" || Array.isArray(parsed.pins)) {
+        alert("pins must be an object.");
+        return;
+      }
+
+      if (!Array.isArray(parsed.cuts)) {
+        alert("cuts must be an array.");
+        return;
+      }
+
+      if (!Array.isArray(parsed.jumpers)) {
+        alert("jumpers must be an array.");
+        return;
+      }
+
+      Object.assign(boardData, parsed);
+
+      creatingJumper = null;
+      dragging = null;
+      selectedComponentId = null;
+
+      closeDataEditor();
+      render();
+    }
+
+    dataModal.addEventListener("click", (e) => {
+      if (e.target === dataModal) {
+        closeDataEditor();
+      }
+    });
+
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && dataModal.style.display === "flex") {
+        closeDataEditor();
+        return;
+      }
+
+      if (dataModal.style.display === "flex") return;
+
+      const active = document.activeElement;
+      const isTextInput =
+        active?.tagName === "INPUT" &&
+        ["", "text", "search", "url", "email", "password", "number", "tel"].includes((active.getAttribute("type") || "").toLowerCase());
+      const isTyping =
+        isTextInput ||
+        active?.tagName === "TEXTAREA" ||
+        active?.isContentEditable;
+
+      if (isTyping) return;
+
+      if ((e.key === "r" || e.key === "R") && selectedComponentId) {
+        e.preventDefault();
+        rotateComponentClockwise(selectedComponentId);
+        render();
+      }
+    });
+
+    // ---------------- CONNECTIVITY ----------------
+
+    function neighbors(r, c) {
+      const n = [];
+
+      // horizontal (strip unless cut)
+      if (c > 0 && !boardData.cuts.some(x => x.row === r && x.col === c - 1)) n.push([r, c - 1]);
+      if (c < cols - 1 && !boardData.cuts.some(x => x.row === r && x.col === c)) n.push([r, c + 1]);
+
+      // jumpers
+      boardData.jumpers.forEach(j => {
+        if (j.from.row === r && j.from.col === c)
+          n.push([j.to.row, j.to.col]);
+        if (j.to.row === r && j.to.col === c)
+          n.push([j.from.row, j.from.col]);
+      });
+
+      return n;
+    }
+
+    // only start flood from USED holes
+    function getUsedHoles() {
+      const set = new Set();
+
+      Object.values(boardData.pins).forEach(compPins => {
+        Object.values(compPins).forEach(p => {
+          set.add(key(p.row, p.col));
+        });
+      });
+
+      boardData.jumpers.forEach(j => {
+        set.add(key(j.from.row, j.from.col));
+        set.add(key(j.to.row, j.to.col));
+      });
+
+      return set;
+    }
+
+    function flood(startR, startC) {
+      const visited = new Set();
+      const stack = [[startR, startC]];
+
+      while (stack.length) {
+        const [r, c] = stack.pop();
+        const k = key(r, c);
+        if (visited.has(k)) continue;
+
+        visited.add(k);
+
+        neighbors(r, c).forEach(n => {
+          if (!visited.has(key(n[0], n[1])))
+            stack.push(n);
+        });
+      }
+
+      return visited;
+    }
+
+    let overlayOn = false;
+    function drawOverlay() {
+      const used = getUsedHoles();
+      const seen = new Set();
+
+      const g = create("g", { id: "overlayLayer" });
+
+      used.forEach(k => {
+        if (seen.has(k)) return;
+
+        const [r, c] = k.split(',').map(Number);
+        const region = flood(r, c);
+
+        region.forEach(x => seen.add(x));
+
+        // ---- DRAW STRIP SEGMENTS ----
+        // Only draw between relevant used points (component pins / jumper ends)
+        // so the glow does not continue through empty strip sections.
+        for (let rr = 0; rr < rows; rr++) {
+          let runStart = 0;
+
+          for (let cc = 0; cc < cols; cc++) {
+            const atRunEnd = cc === cols - 1 || boardData.cuts.some(cut => cut.row === rr && cut.col === cc);
+            if (!atRunEnd) continue;
+
+            const runEnd = cc;
+            const relevantCols = [];
+
+            for (let c2 = runStart; c2 <= runEnd; c2++) {
+              const holeKey = key(rr, c2);
+              if (region.has(holeKey) && used.has(holeKey)) {
+                relevantCols.push(c2);
+              }
+            }
+
+            if (relevantCols.length > 0) {
+              const startCol = relevantCols[0];
+              const endCol = relevantCols[relevantCols.length - 1];
+
+              const p1 = pos(rr, startCol);
+              const p2 = pos(rr, endCol);
+
+              g.appendChild(create("line", {
+                x1: p1.x,
+                y1: p1.y,
+                x2: p2.x,
+                y2: p2.y,
+                stroke: "rgba(0,0,255,0.4)",
+                "stroke-width": 16,
+                "stroke-linecap": "round",
+                filter: "blur(1.5px)"
+              }));
+            }
+
+            runStart = cc + 1;
+          }
+        }
+
+        // ---- DRAW JUMPER OVERLAY ----
+        boardData.jumpers.forEach(j => {
+          const k1 = key(j.from.row, j.from.col);
+          const k2 = key(j.to.row, j.to.col);
+
+          if (region.has(k1) && region.has(k2)) {
+            const p1 = pos(j.from.row, j.from.col);
+            const p2 = pos(j.to.row, j.to.col);
+
+            g.appendChild(create("line", {
+              x1: p1.x,
+              y1: p1.y,
+              x2: p2.x,
+              y2: p2.y,
+              stroke: "rgba(0,0,255,0.5)",
+              "stroke-width": 12,
+              "stroke-linecap": "round",
+              filter: "blur(1.5px)"
+            }));
+          }
+        });
+
+      });
+
+      svg.appendChild(g);
+    }
+    function clearOverlay() {
+      const el = document.getElementById("overlayLayer");
+      if (el) el.remove();
+    }
+
+    function toggleOverlay() {
+      overlayOn = !overlayOn;
+      render();
+    }
+
+
+    function drawStrips() {
+
+      // ---------------- DRAW STRIPS ----------------
+
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols - 1; c++) {
+
+          const hasCut = boardData.cuts.some(cut => cut.row === r && cut.col === c);
+
+          if (!hasCut) {
+            const p1 = pos(r, c);
+            const p2 = pos(r, c + 1);
+
+            svg.appendChild(create("line", {
+              x1: p1.x,
+              y1: p1.y,
+              x2: p2.x,
+              y2: p2.y,
+              class: "strip"
+            }));
+          }
+        }
+
+        for (let c = 0; c < cols; c++) {
+          const p = pos(r, c);
+          svg.appendChild(create("circle", {
+            cx: p.x,
+            cy: p.y,
+            r: 3,
+            class: "hole"
+          }));
+        }
+      }
+
+
+
+    }
+
+
+    function drawCuts() {
+      boardData.cuts.forEach((cut, index) => {
+        const p = pos(cut.row, cut.col);
+
+        const line = create("line", {
+          x1: p.x + 6,
+          y1: p.y - 5,
+          x2: p.x + 20,
+          y2: p.y + 5,
+          class: "cut"
+        });
+
+        line.dataset.cutIndex = index;
+        line.style.cursor = "pointer";
+
+        svg.appendChild(line);
+      });
+    }
+
+
+    function drawJumpers() {
+
+      boardData.jumpers.forEach((j, index) => {
+
+        const p1 = pos(j.from.row, j.from.col);
+        const p2 = pos(j.to.row, j.to.col);
+
+        // wire (NOT draggable)
+        const wire = create("line", {
+          x1: p1.x,
+          y1: p1.y,
+          x2: p2.x,
+          y2: p2.y,
+          class: "jumper"
+        });
+
+        wire.dataset.jumperIndex = index;
+        wire.style.cursor = "pointer";
+        svg.appendChild(wire);
+
+        // ---- HANDLE 1 ----
+        const h1 = create("circle", {
+          cx: p1.x,
+          cy: p1.y,
+          r: 6,
+          fill: "white",
+          stroke: "green",
+          "stroke-width": 2
+        });
+
+        h1.dataset.jumperIndex = index;
+        h1.dataset.end = "from";
+        h1.style.cursor = "grab";
+
+        svg.appendChild(h1);
+
+        // ---- HANDLE 2 ----
+        const h2 = create("circle", {
+          cx: p2.x,
+          cy: p2.y,
+          r: 6,
+          fill: "white",
+          stroke: "green",
+          "stroke-width": 2
+        });
+
+        h2.dataset.jumperIndex = index;
+        h2.dataset.end = "to";
+        h2.style.cursor = "grab";
+
+        svg.appendChild(h2);
+      });
+
+    }
+
+
+    function drawComponents() {
+
+      labelPinsByNet = document.getElementById("labelByNet")?.checked ?? false;
+
+      boardData.components.forEach(comp => {
+
+        const pins = comp.pins.map(pin => {
+          const pl = boardData.pins[comp.id]?.[pin.id];
+          if (!pl) return null;
+          return { ...pin, ...pos(pl.row, pl.col), row: pl.row, col: pl.col };
+        }).filter(Boolean);
+
+        // Render DIP-8 style packages (two columns of four pins) as a chip body.
+        if (pins.length === 8) {
+          const colsUsed = [...new Set(pins.map(pin => pin.col))].sort((a, b) => a - b);
+
+          if (colsUsed.length === 2) {
+            const leftPins = pins
+              .filter(pin => pin.col === colsUsed[0])
+              .sort((a, b) => a.row - b.row);
+            const rightPins = pins
+              .filter(pin => pin.col === colsUsed[1])
+              .sort((a, b) => a.row - b.row);
+
+            if (leftPins.length === 4 && rightPins.length === 4) {
+              const bodyLeft = leftPins[0].x + 8;
+              const bodyRight = rightPins[0].x - 8;
+              const allY = pins.map(pin => pin.y);
+              const top = Math.min(...allY) - 10;
+              const bottom = Math.max(...allY) + 10;
+
+              leftPins.forEach(pin => {
+                svg.appendChild(create("line", {
+                  x1: pin.x,
+                  y1: pin.y,
+                  x2: bodyLeft,
+                  y2: pin.y,
+                  class: "lead"
+                }));
+              });
+
+              rightPins.forEach(pin => {
+                svg.appendChild(create("line", {
+                  x1: pin.x,
+                  y1: pin.y,
+                  x2: bodyRight,
+                  y2: pin.y,
+                  class: "lead"
+                }));
+              });
+
+              const body = create("rect", {
+                x: bodyLeft,
+                y: top,
+                width: bodyRight - bodyLeft,
+                height: bottom - top,
+                rx: 4,
+                class: "component"
+              });
+
+              body.dataset.compId = comp.id;
+              body.style.cursor = "grab";
+              svg.appendChild(body);
+
+              const notchX = (bodyLeft + bodyRight) / 2;
+              svg.appendChild(create("circle", {
+                cx: notchX,
+                cy: top + 5,
+                r: 2.5,
+                fill: "black"
+              }));
+
+              svg.appendChild(create("text", {
+                x: notchX,
+                y: top - 6,
+                class: "label"
+              })).textContent = comp.id;
+
+              pins.forEach(pin => {
+                svg.appendChild(create("circle", {
+                  cx: pin.x,
+                  cy: pin.y,
+                  r: 5,
+                  class: "pin"
+                }));
+
+                const isLeft = pin.col === colsUsed[0];
+                svg.appendChild(create("text", {
+                  x: isLeft ? pin.x - 8 : pin.x + 8,
+                  y: pin.y - 8,
+                  class: "label",
+                  "text-anchor": isLeft ? "end" : "start"
+                })).textContent = labelPinsByNet ? (pin.net || pin.id) : pin.id;
+              });
+
+              return;
+            }
+          }
+        }
+
+        if (pins.length < 2) return;
+
+        const p1 = pins[0];
+        const p2 = pins[1];
+
+        const dx = p2.x - p1.x;
+        const dy = p2.y - p1.y;
+
+        const length = Math.sqrt(dx * dx + dy * dy);
+        const angle = Math.atan2(dy, dx);
+        const angleDeg = angle * 180 / Math.PI;
+
+        const midX = (p1.x + p2.x) / 2;
+        const midY = (p1.y + p2.y) / 2;
+
+        const bodyLength = Math.max(25, length * 0.4);
+        const bodyThickness = 12;
+        const half = bodyLength / 2;
+
+        const lead1End = {
+          x: midX - Math.cos(angle) * half,
+          y: midY - Math.sin(angle) * half
+        };
+
+        const lead2End = {
+          x: midX + Math.cos(angle) * half,
+          y: midY + Math.sin(angle) * half
+        };
+
+        // leads
+        svg.appendChild(create("line", {
+          x1: p1.x, y1: p1.y,
+          x2: lead1End.x, y2: lead1End.y,
+          class: "lead"
+        }));
+
+        svg.appendChild(create("line", {
+          x1: p2.x, y1: p2.y,
+          x2: lead2End.x, y2: lead2End.y,
+          class: "lead"
+        }));
+
+        // âœ… FIX: create body ONCE and attach drag behaviour here
+        const body = create("rect", {
+          x: -half,
+          y: -bodyThickness / 2,
+          width: bodyLength,
+          height: bodyThickness,
+          class: "component",
+          transform: `translate(${midX},${midY}) rotate(${angleDeg})`
+        });
+
+        // âœ… attach drag metadata here (INSIDE loop)
+        body.dataset.compId = comp.id;
+        body.style.cursor = "grab";
+
+        svg.appendChild(body);
+
+        // label
+        svg.appendChild(create("text", {
+          x: midX,
+          y: midY - bodyThickness,
+          class: "label"
+        })).textContent = comp.id;
+
+        // pins
+        pins.forEach(pin => {
+          svg.appendChild(create("circle", {
+            cx: pin.x,
+            cy: pin.y,
+            r: 5,
+            class: "pin"
+          }));
+
+          svg.appendChild(create("text", {
+            x: pin.x,
+            y: pin.y - 8,
+            class: "label"
+          })).textContent = labelPinsByNet ? (pin.net || pin.id) : pin.id;
+        });
+
+      });
+    }
+
+
+
+    function render() {
+      svg.innerHTML = "";
+
+      const cutsOnTop = document.getElementById("cutsOnTop")?.checked ?? false;
+
+      if (overlayOn) drawOverlay();
+      drawStrips();
+      if (!cutsOnTop) drawCuts();
+
+      drawJumpers();
+      drawComponents();
+
+      if (cutsOnTop) drawCuts();
+    }
+
+    svg.addEventListener("mousedown", (e) => {
+      e.preventDefault();
+
+      const compId = e.target.dataset.compId;
+      const jumperIndex = e.target.dataset.jumperIndex;
+      const cutIndex = e.target.dataset.cutIndex;
+      const end = e.target.dataset.end;
+
+      if (compId) {
+        selectedComponentId = compId;
+        dragging = { type: "component", compId };
+      }
+      else if (jumperIndex !== undefined) {
+        dragging = {
+          type: "jumper-end",
+          index: Number(jumperIndex),
+          end
+        };
+      }
+      else if (cutIndex !== undefined) {
+        dragging = { type: "cut", index: Number(cutIndex) };
+      }
+    });
+
+    svg.addEventListener("mousemove", (e) => {
+      if (!dragging) return;
+
+      const snapped = snap(e.offsetX, e.offsetY);
+
+      // ---------------- COMPONENT ----------------
+      if (dragging.type === "component") {
+        const comp = boardData.components.find(c => c.id === dragging.compId);
+
+        const firstPin = comp.pins[0];
+        const old = boardData.pins[comp.id][firstPin.id];
+
+        const dRow = snapped.row - old.row;
+        const dCol = snapped.col - old.col;
+
+        comp.pins.forEach(pin => {
+          const p = boardData.pins[comp.id][pin.id];
+
+          boardData.pins[comp.id][pin.id] = {
+            row: p.row + dRow,
+            col: p.col + dCol
+          };
+        });
+      }
+
+      // ---------------- JUMPER END ----------------
+      if (dragging.type === "jumper-end") {
+        const j = boardData.jumpers[dragging.index];
+        j[dragging.end] = snapped;
+      }
+
+      // ---------------- CUT ----------------
+      if (dragging.type === "cut") {
+        boardData.cuts[dragging.index] = snapped;
+      }
+
+      render();
+    });
+
+    svg.addEventListener("click", (e) => {
+
+      // ignore if dragging
+      if (dragging) return;
+
+      const snapped = snap(e.offsetX, e.offsetY);
+
+      // Ctrl+click: toggle a cut at this hole
+      if (e.ctrlKey) {
+        const jumperIndex = e.target.dataset.jumperIndex;
+        if (jumperIndex !== undefined) {
+          boardData.jumpers.splice(Number(jumperIndex), 1);
+          creatingJumper = null;
+          render();
+          return;
+        }
+
+        const existingIndex = boardData.cuts.findIndex(cut =>
+          cut.row === snapped.row && cut.col === snapped.col
+        );
+
+        if (existingIndex >= 0) {
+          boardData.cuts.splice(existingIndex, 1);
+        } else {
+          boardData.cuts.push(snapped);
+        }
+
+        render();
+        return;
+      }
+
+      // Jumper creation is only active while Shift is held
+      if (!e.shiftKey) return;
+
+      // first click â†’ start
+      if (!creatingJumper) {
+        creatingJumper = { from: snapped };
+        return;
+      }
+
+      // second click â†’ complete
+      boardData.jumpers.push({
+        from: creatingJumper.from,
+        to: snapped
+      });
+
+      creatingJumper = null;
+      render();
+    });
+
+
+
+
+    window.addEventListener("mouseup", () => {
+      dragging = null;
+    });
+
+
+    render();
+
+  </script>
+</body>
+
+</html>
