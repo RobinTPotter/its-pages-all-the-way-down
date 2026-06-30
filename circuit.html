@@ -356,6 +356,7 @@
           <li><strong>Move Group:</strong> With items selected, click and drag any selected item to move the whole group together.</li>
           <li><strong>Duplicate Group (D):</strong> With items selected, press <code>D</code> to duplicate the whole group; the new copies become the active selection.</li>
           <li><strong>Delete Group:</strong> With items selected, press <code>Delete</code> or <code>Backspace</code> to remove them all.</li>
+          <li><strong>Pan View:</strong> Hold the middle mouse button and drag to pan the board left/right/up/down. (No zoom yet.)</li>
           <li><strong>Close Modals:</strong> Press <code>Escape</code> to close open modals.</li>
         </ul>
 
@@ -460,6 +461,22 @@
     let lasso = null;
 
     let groupDrag = null;
+
+    let panning = null;
+
+    const SVG_W = 900;
+    const SVG_H = 600;
+    const viewBox = { x: 0, y: 0, w: SVG_W, h: SVG_H };
+    const MIN_SCALE = 0.25; // most zoomed-in
+    const MAX_SCALE = 4;    // most zoomed-out
+
+    function updateViewBox() {
+      svg.setAttribute("viewBox", `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`);
+    }
+
+    // Convert a mouse event's offset coords into board (user) coords, accounting for pan + zoom.
+    function ux(e) { return viewBox.x + e.offsetX * (viewBox.w / SVG_W); }
+    function uy(e) { return viewBox.y + e.offsetY * (viewBox.h / SVG_H); }
 
     const selectedSet = {
       components: new Set(),
@@ -696,7 +713,7 @@
     // ---------------- CONFIG ----------------
 
     let rows = 15;
-    let cols = 25;
+    let cols = 100;
     const spacing = 25;
 
     const svg = document.getElementById("board");
@@ -1625,6 +1642,60 @@
     }
 
 
+    function drawAxisLabels() {
+      const scale = viewBox.w / SVG_W;
+      const fs = 11 * scale;       // keep a roughly constant on-screen size
+      const pad = 6 * scale;       // inset from the visible edge
+
+      // Column numbers: pin to the visible top edge when row 0 scrolls off the top
+      const naturalTopY = pos(0, 0).y - 22 * scale;
+      const topY = Math.max(naturalTopY, viewBox.y + fs + pad);
+      for (let c = 0; c < cols; c++) {
+        const p = pos(0, c);
+        // background chip for readability when pinned over strips
+        svg.appendChild(create("rect", {
+          x: p.x - fs * 0.7,
+          y: topY - fs,
+          width: fs * 1.4,
+          height: fs * 1.3,
+          fill: "rgba(250,250,250,0.85)"
+        }));
+        const t = create("text", {
+          x: p.x,
+          y: topY,
+          "text-anchor": "middle",
+          "font-size": fs,
+          fill: "#888"
+        });
+        t.textContent = c;
+        svg.appendChild(t);
+      }
+
+      // Row numbers: pin to the visible left edge when col 0 scrolls off the left
+      const naturalLeftX = pos(0, 0).x - 22 * scale;
+      const leftX = Math.max(naturalLeftX, viewBox.x + fs + pad);
+      for (let r = 0; r < rows; r++) {
+        const p = pos(r, 0);
+        svg.appendChild(create("rect", {
+          x: leftX - fs,
+          y: p.y - fs * 0.65,
+          width: fs * 2,
+          height: fs * 1.3,
+          fill: "rgba(250,250,250,0.85)"
+        }));
+        const t = create("text", {
+          x: leftX,
+          y: p.y + fs / 3,
+          "text-anchor": "middle",
+          "font-size": fs,
+          fill: "#888"
+        });
+        t.textContent = r;
+        svg.appendChild(t);
+      }
+    }
+
+
     function drawCuts() {
       boardData.cuts.forEach((cut, index) => {
         const p = pos(cut.row, cut.col);
@@ -2251,6 +2322,7 @@
 
       if (overlayOn) drawOverlay();
       drawStrips();
+      drawAxisLabels();
       if (!cutsOnTop) drawCuts();
 
       drawJumpers();
@@ -2444,6 +2516,17 @@
 
 
     svg.addEventListener("mousedown", (e) => {
+      // Middle mouse button: start panning the viewport
+      if (e.button === 1) {
+        e.preventDefault();
+        panning = { startX: e.clientX, startY: e.clientY, vx: viewBox.x, vy: viewBox.y };
+        svg.style.cursor = "grabbing";
+        return;
+      }
+
+      // Only the left button drives selection/drag interactions
+      if (e.button !== 0) return;
+
       e.preventDefault();
 
       const compId = e.target.dataset.compId;
@@ -2458,7 +2541,7 @@
           (jumperIndex !== undefined && selectedSet.jumpers.has(Number(jumperIndex))) ||
           (cutIndex !== undefined && selectedSet.cuts.has(Number(cutIndex)));
         if (clickedSelected) {
-          const m = snap(e.offsetX, e.offsetY);
+          const m = snap(ux(e), uy(e));
           groupDrag = { lastRow: m.row, lastCol: m.col };
           dragging = { type: "group" };
           return;
@@ -2473,7 +2556,7 @@
         const comp = boardData.components.find(c => c.id === compId);
         const firstPin = comp?.pins?.[0];
         const firstPinPos = firstPin ? boardData.pins[compId]?.[firstPin.id] : null;
-        const mouseSnap = snap(e.offsetX, e.offsetY);
+        const mouseSnap = snap(ux(e), uy(e));
 
         dragging = {
           type: "component",
@@ -2531,7 +2614,7 @@
         // Empty board area: start a lasso selection (no modifiers held)
         if (!e.shiftKey && !e.ctrlKey) {
           clearSelection();
-          lasso = { x0: e.offsetX, y0: e.offsetY, x1: e.offsetX, y1: e.offsetY };
+          lasso = { x0: ux(e), y0: uy(e), x1: ux(e), y1: uy(e) };
           dragging = { type: "lasso" };
           render();
         }
@@ -2541,13 +2624,13 @@
     svg.addEventListener("mousemove", (e) => {
       if (!dragging) return;
 
-      const snapped = snap(e.offsetX, e.offsetY);
-      const snappedCut = snapCut(e.offsetX, e.offsetY);
+      const snapped = snap(ux(e), uy(e));
+      const snappedCut = snapCut(ux(e), uy(e));
 
       // ---------------- LASSO ----------------
       if (dragging.type === "lasso") {
-        lasso.x1 = e.offsetX;
-        lasso.y1 = e.offsetY;
+        lasso.x1 = ux(e);
+        lasso.y1 = uy(e);
         render();
         return;
       }
@@ -2622,8 +2705,8 @@
       // ignore if dragging
       if (dragging) return;
 
-      const snapped = snap(e.offsetX, e.offsetY);
-      const snappedCut = snapCut(e.offsetX, e.offsetY);
+      const snapped = snap(ux(e), uy(e));
+      const snappedCut = snapCut(ux(e), uy(e));
 
       // Ctrl+click: toggle a cut at this hole
       if (e.ctrlKey) {
@@ -2689,7 +2772,23 @@
 
 
 
+    window.addEventListener("mousemove", (e) => {
+      if (!panning) return;
+      const scaleX = viewBox.w / SVG_W;
+      const scaleY = viewBox.h / SVG_H;
+      const dx = (e.clientX - panning.startX) * scaleX;
+      const dy = (e.clientY - panning.startY) * scaleY;
+      viewBox.x = panning.vx - dx;
+      viewBox.y = panning.vy - dy;
+      updateViewBox();
+      render();
+    });
+
     window.addEventListener("mouseup", () => {
+      if (panning) {
+        panning = null;
+        svg.style.cursor = "";
+      }
       if (dragging && dragging.type === "lasso") {
         finalizeLasso();
         lasso = null;
@@ -2701,7 +2800,36 @@
       groupDrag = null;
     });
 
+    // Prevent the middle-click autoscroll bubble on the board
+    svg.addEventListener("auxclick", (e) => {
+      if (e.button === 1) e.preventDefault();
+    });
 
+    // Mouse wheel: zoom the viewport, keeping the point under the cursor fixed
+    svg.addEventListener("wheel", (e) => {
+      e.preventDefault();
+
+      // Board coord under the cursor before zoom
+      const bx = ux(e);
+      const by = uy(e);
+
+      const currentScale = viewBox.w / SVG_W;
+      const zoomFactor = e.deltaY < 0 ? 0.9 : 1 / 0.9; // wheel up = zoom in
+      let nextScale = currentScale * zoomFactor;
+      nextScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, nextScale));
+
+      viewBox.w = SVG_W * nextScale;
+      viewBox.h = SVG_H * nextScale;
+
+      // Keep the cursor's board point anchored in place
+      viewBox.x = bx - (e.offsetX / SVG_W) * viewBox.w;
+      viewBox.y = by - (e.offsetY / SVG_H) * viewBox.h;
+
+      updateViewBox();
+      render();
+    }, { passive: false });
+
+    updateViewBox();
     render();
 
   </script>
