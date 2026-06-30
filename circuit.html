@@ -306,6 +306,16 @@
       };
     }
 
+    function snapCut(x, y) {
+      const col = Math.floor((x - 50) / spacing);
+      const row = Math.round((y - 50) / spacing);
+
+      return {
+        row: Math.max(0, Math.min(rows - 1, row)),
+        col: Math.max(0, Math.min(cols - 2, col))
+      };
+    }
+
     // ---------------- DATA ----------------
 
     const boardData = {
@@ -1344,13 +1354,13 @@
 
       function styleComponentBody(el, comp) {
         if (typeof comp.color === "string" && comp.color.trim()) {
-          el.setAttribute("fill", comp.color);
+          el.style.fill = comp.color;
         }
 
         if (Number.isFinite(Number(comp.opacity))) {
           const op = Number(comp.opacity);
           if (op >= 0 && op <= 1) {
-            el.setAttribute("opacity", String(op));
+            el.style.opacity = String(op);
           }
         }
       }
@@ -1460,6 +1470,14 @@
         const maxX = Math.max(...pins.map(pin => pin.x));
         const minY = Math.min(...pins.map(pin => pin.y));
         const maxY = Math.max(...pins.map(pin => pin.y));
+        const hasFootprint =
+          comp.footprint &&
+          Number.isInteger(comp.footprint.width) && comp.footprint.width > 0 &&
+          Number.isInteger(comp.footprint.height) && comp.footprint.height > 0;
+        const fpWidth = hasFootprint ? comp.footprint.width : null;
+        const fpHeight = hasFootprint ? comp.footprint.height : null;
+        const centerX = pins.reduce((sum, pin) => sum + pin.x, 0) / pins.length;
+        const centerY = pins.reduce((sum, pin) => sum + pin.y, 0) / pins.length;
 
         if (pins.length >= 4 && colsUsed.length === 2) {
           const leftX = pos(0, colsUsed[0]).x;
@@ -1468,6 +1486,11 @@
           let bodyRight = rightX - halfPitch;
           let bodyTop = minY - halfPitch;
           let bodyBottom = maxY + halfPitch;
+
+          if (fpHeight) {
+            bodyTop = centerY - (fpHeight * spacing) / 2;
+            bodyBottom = centerY + (fpHeight * spacing) / 2;
+          }
 
           if (bodyRight - bodyLeft < minBodyThickness) {
             const mid = (leftX + rightX) / 2;
@@ -1541,6 +1564,11 @@
           let bodyBottom = bottomY - halfPitch;
           let bodyLeft = minX - halfPitch;
           let bodyRight = maxX + halfPitch;
+
+          if (fpWidth) {
+            bodyLeft = centerX - (fpWidth * spacing) / 2;
+            bodyRight = centerX + (fpWidth * spacing) / 2;
+          }
 
           if (bodyBottom - bodyTop < minBodyThickness) {
             const mid = (topY + bottomY) / 2;
@@ -1620,7 +1648,10 @@
         const midX = (p1.x + p2.x) / 2;
         const midY = (p1.y + p2.y) / 2;
 
-        const bodyLength = Math.max(25, length - spacing);
+        const footprintSpan = hasFootprint
+          ? (horizontal ? fpWidth * spacing : fpHeight * spacing)
+          : 0;
+        const bodyLength = Math.max(25, (footprintSpan || length) - spacing);
         const bodyThickness = 12;
         const half = bodyLength / 2;
 
@@ -1716,7 +1747,17 @@
       if (compId) {
         selectedComponentId = compId;
         lastInteraction = { type: "component", id: compId };
-        dragging = { type: "component", compId };
+        const comp = boardData.components.find(c => c.id === compId);
+        const firstPin = comp?.pins?.[0];
+        const firstPinPos = firstPin ? boardData.pins[compId]?.[firstPin.id] : null;
+        const mouseSnap = snap(e.offsetX, e.offsetY);
+
+        dragging = {
+          type: "component",
+          compId,
+          anchorRow: firstPinPos ? firstPinPos.row - mouseSnap.row : 0,
+          anchorCol: firstPinPos ? firstPinPos.col - mouseSnap.col : 0
+        };
       }
       else if (jumperIndex !== undefined) {
         lastInteraction = { type: "jumper", id: Number(jumperIndex) };
@@ -1736,16 +1777,24 @@
       if (!dragging) return;
 
       const snapped = snap(e.offsetX, e.offsetY);
+      const snappedCut = snapCut(e.offsetX, e.offsetY);
 
       // ---------------- COMPONENT ----------------
       if (dragging.type === "component") {
         const comp = boardData.components.find(c => c.id === dragging.compId);
+        if (!comp) return;
 
         const firstPin = comp.pins[0];
         const old = boardData.pins[comp.id][firstPin.id];
+        if (!old) return;
 
-        const dRow = snapped.row - old.row;
-        const dCol = snapped.col - old.col;
+        const targetFirst = {
+          row: Math.max(0, Math.min(rows - 1, snapped.row + (dragging.anchorRow || 0))),
+          col: Math.max(0, Math.min(cols - 1, snapped.col + (dragging.anchorCol || 0)))
+        };
+
+        const dRow = targetFirst.row - old.row;
+        const dCol = targetFirst.col - old.col;
 
         comp.pins.forEach(pin => {
           const p = boardData.pins[comp.id][pin.id];
@@ -1765,7 +1814,7 @@
 
       // ---------------- CUT ----------------
       if (dragging.type === "cut") {
-        boardData.cuts[dragging.index] = snapped;
+        boardData.cuts[dragging.index] = snappedCut;
       }
 
       render();
@@ -1777,6 +1826,7 @@
       if (dragging) return;
 
       const snapped = snap(e.offsetX, e.offsetY);
+      const snappedCut = snapCut(e.offsetX, e.offsetY);
 
       // Ctrl+click: toggle a cut at this hole
       if (e.ctrlKey) {
@@ -1803,13 +1853,13 @@
         }
 
         const existingIndex = boardData.cuts.findIndex(cut =>
-          cut.row === snapped.row && cut.col === snapped.col
+          cut.row === snappedCut.row && cut.col === snappedCut.col
         );
 
         if (existingIndex >= 0) {
           boardData.cuts.splice(existingIndex, 1);
         } else {
-          boardData.cuts.push(snapped);
+          boardData.cuts.push(snappedCut);
         }
 
         render();
