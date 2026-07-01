@@ -24,6 +24,12 @@
       stroke-width: 3;
     }
 
+    .drill-cut {
+      stroke: #333;
+      stroke-width: 2;
+      fill: none;
+    }
+
     .component {
       fill: lightblue;
       opacity: 0.8;
@@ -235,13 +241,18 @@
     Cuts on top
   </label>
   <label style="margin-left: 12px; font-size: 14px;">
+    <input id="drillCutMode" type="checkbox">
+    Drill-hole cut mode
+  </label>
+  <label style="margin-left: 12px; font-size: 14px;">
     Rows: <input id="topBoardRows" type="number" min="5" max="50" value="15" style="width: 50px;">
   </label>
   <label style="margin-left: 8px; font-size: 14px;">
-    Cols: <input id="topBoardCols" type="number" min="5" max="50" value="25" style="width: 50px;">
+    Cols: <input id="topBoardCols" type="number" min="5" max="100" value="25" style="width: 50px;">
   </label>
   <button style="margin-left: 8px;" onclick="updateBoardDimensionsFromTop()">Resize</button>
   <button style="margin-left: 12px;" onclick="openDataEditor()">Edit Data</button>
+  <button style="margin-left: 12px;" onclick="openRenameComponentsModal()">Rename Components</button>
   <button style="margin-left: 12px;" onclick="openComponentEditor()">New Component (C)</button>
   <button style="margin-left: 12px;" onclick="openHelpModal()">Help (?)</button>
   <button style="margin-left: 12px; background-color: #ffcccc;" onclick="openClearModal()">Clear Board</button>
@@ -313,6 +324,20 @@
     </div>
   </div>
 
+  <div id="renameComponentsModal" class="modal-backdrop">
+    <div class="modal-panel" style="width:min(92vw,560px);height:auto;max-height:85vh;">
+      <h2>Rename Components</h2>
+      <p style="color:#666; font-size:13px; margin:0;">
+        Enter one component ID per line in the same order. Click Update to apply all renames.
+      </p>
+      <textarea id="renameComponentsEditor" spellcheck="false" style="min-height:260px; width:100%; resize:vertical; font-family:Consolas, monospace; font-size:14px; line-height:1.35; padding:10px; box-sizing:border-box;"></textarea>
+      <div class="modal-actions">
+        <button onclick="closeRenameComponentsModal()">Cancel</button>
+        <button onclick="applyRenameComponentsModal()">Update</button>
+      </div>
+    </div>
+  </div>
+
   <div id="clearModal" class="modal-backdrop">
     <div class="modal-panel" style="width:min(92vw,400px);height:auto;">
       <h2>Clear Board?</h2>
@@ -356,7 +381,7 @@
           <li><strong>Move Group:</strong> With items selected, click and drag any selected item to move the whole group together.</li>
           <li><strong>Duplicate Group (D):</strong> With items selected, press <code>D</code> to duplicate the whole group; the new copies become the active selection.</li>
           <li><strong>Delete Group:</strong> With items selected, press <code>Delete</code> or <code>Backspace</code> to remove them all.</li>
-          <li><strong>Pan View:</strong> Hold the middle mouse button and drag to pan the board left/right/up/down. (No zoom yet.)</li>
+          <li><strong>Pan & Zoom View:</strong> Hold the middle mouse button and drag to pan the board left/right/up/down. Use the mouse wheel to zoom in and out.</li>
           <li><strong>Close Modals:</strong> Press <code>Escape</code> to close open modals.</li>
         </ul>
 
@@ -370,6 +395,7 @@
         <h3>Cuts & Strip Isolation</h3>
         <ul>
           <li><strong>Add/Remove Cut:</strong> Hold Ctrl and click to toggle a cut segment. Cuts snap to strip segments (between adjacent holes), using segment-based X snapping.</li>
+          <li><strong>Add/Remove Drill-hole Cut:</strong> Enable <code>Drill-hole cut mode</code>, then hold Ctrl and click a hole to isolate that hole from the strip.</li>
           <li><strong>Move Cut:</strong> Drag an existing cut marker to move it to another segment.</li>
           <li><strong>Move Multiple Cuts (Alt+Drag):</strong> Hold Alt while dragging a cut to move all cuts in the same row together by the same offset.</li>
         </ul>
@@ -389,6 +415,7 @@
           <li><strong>components[]</strong>: logical parts and per-part metadata.</li>
           <li><strong>pins { [componentId]: { [pinId]: {row,col} } }</strong>: physical pin locations on the board grid.</li>
           <li><strong>cuts[]</strong>: strip break segments as <code>{row, col}</code> where <code>col</code> is the segment between hole <code>col</code> and <code>col+1</code>.</li>
+          <li><strong>drillCuts[]</strong>: drilled-hole breaks as <code>{row, col}</code>, isolating that hole from adjacent strip copper.</li>
           <li><strong>jumpers[]</strong>: wires connecting two holes as <code>{ from:{row,col}, to:{row,col} }</code>.</li>
         </ul>
         <p><strong>Component properties</strong> currently used:</p>
@@ -425,6 +452,7 @@
     }
   },
   "cuts": [ { "row": 4, "col": 8 } ],
+  "drillCuts": [ { "row": 4, "col": 9 } ],
   "jumpers": [ { "from": {"row": 0, "col": 0}, "to": {"row": 2, "col": 0} } ]
 }</pre>
 
@@ -451,6 +479,7 @@
     let dragging = null;
 
     let creatingJumper = null;
+    let creatingJumperTo = null;
 
     let labelPinsByNet = false;
 
@@ -481,17 +510,19 @@
     const selectedSet = {
       components: new Set(),
       jumpers: new Set(),
-      cuts: new Set()
+      cuts: new Set(),
+      drillCuts: new Set()
     };
 
     function hasMultiSelection() {
-      return selectedSet.components.size + selectedSet.jumpers.size + selectedSet.cuts.size > 0;
+      return selectedSet.components.size + selectedSet.jumpers.size + selectedSet.cuts.size + selectedSet.drillCuts.size > 0;
     }
 
     function clearSelection() {
       selectedSet.components.clear();
       selectedSet.jumpers.clear();
       selectedSet.cuts.clear();
+      selectedSet.drillCuts.clear();
     }
 
     function snap(x, y) {
@@ -512,6 +543,15 @@
         row: Math.max(0, Math.min(rows - 1, row)),
         col: Math.max(0, Math.min(cols - 2, col))
       };
+    }
+
+    function hasSegmentCut(row, col) {
+      return boardData.cuts.some(cut => cut.row === row && cut.col === col);
+    }
+
+    function hasDrillCut(row, col) {
+      const drills = Array.isArray(boardData.drillCuts) ? boardData.drillCuts : [];
+      return drills.some(cut => cut.row === row && cut.col === col);
     }
 
     // ---------------- DATA ----------------
@@ -696,6 +736,7 @@
             "col": 10
         }
     ],
+      "drillCuts": [],
     "jumpers": [
         {
             "from": {
@@ -715,6 +756,8 @@
     let rows = 15;
     let cols = 100;
     const spacing = 25;
+    const MAXROWS = 50;
+    const MAXCOLS = 100;
 
     const svg = document.getElementById("board");
     const dataModal = document.getElementById("dataModal");
@@ -729,6 +772,8 @@
     const newCompColorInput = document.getElementById("newCompColor");
     const newCompOpacityInput = document.getElementById("newCompOpacity");
     const newCompSplitSidesInput = document.getElementById("newCompSplitSides");
+    const renameComponentsModal = document.getElementById("renameComponentsModal");
+    const renameComponentsEditor = document.getElementById("renameComponentsEditor");
     const clearModal = document.getElementById("clearModal");
     const helpModal = document.getElementById("helpModal");
     const pinModal = document.getElementById("pinModal");
@@ -851,13 +896,17 @@
         const c = boardData.cuts[i];
         if (c) coords.push(c);
       });
+      selectedSet.drillCuts.forEach(i => {
+        const c = (boardData.drillCuts || [])[i];
+        if (c) coords.push(c);
+      });
       if (coords.length === 0) return;
 
       const canOffsetPos = coords.every(p => p.row < rows - 1 && p.col < cols - 1);
       const canOffsetNeg = coords.every(p => p.row > 0 && p.col > 0);
       const d = canOffsetPos ? 1 : (canOffsetNeg ? -1 : 0);
 
-      const newSelection = { components: new Set(), jumpers: new Set(), cuts: new Set() };
+      const newSelection = { components: new Set(), jumpers: new Set(), cuts: new Set(), drillCuts: new Set() };
 
       // Duplicate components
       selectedSet.components.forEach(id => {
@@ -916,11 +965,26 @@
         newSelection.cuts.add(boardData.cuts.length - 1);
       });
 
+      // Duplicate drill-hole cuts
+      selectedSet.drillCuts.forEach(i => {
+        const c = (boardData.drillCuts || [])[i];
+        if (!c) return;
+        if (!Array.isArray(boardData.drillCuts)) {
+          boardData.drillCuts = [];
+        }
+        boardData.drillCuts.push({
+          row: Math.max(0, Math.min(rows - 1, c.row + d)),
+          col: Math.max(0, Math.min(cols - 1, c.col + d))
+        });
+        newSelection.drillCuts.add(boardData.drillCuts.length - 1);
+      });
+
       // Select the freshly created copies
       clearSelection();
       newSelection.components.forEach(id => selectedSet.components.add(id));
       newSelection.jumpers.forEach(i => selectedSet.jumpers.add(i));
       newSelection.cuts.forEach(i => selectedSet.cuts.add(i));
+      newSelection.drillCuts.forEach(i => selectedSet.drillCuts.add(i));
 
       render();
     }
@@ -1012,6 +1076,15 @@
         return;
       }
 
+      if (parsed.drillCuts !== undefined && !Array.isArray(parsed.drillCuts)) {
+        alert("drillCuts must be an array when provided.");
+        return;
+      }
+
+      if (!Array.isArray(parsed.drillCuts)) {
+        parsed.drillCuts = [];
+      }
+
       if (!Array.isArray(parsed.jumpers)) {
         alert("jumpers must be an array.");
         return;
@@ -1045,6 +1118,74 @@
       componentModal.style.display = "none";
     }
 
+    function openRenameComponentsModal() {
+      const ids = boardData.components.map(comp => comp.id);
+      renameComponentsEditor.value = ids.join("\n");
+      renameComponentsModal.style.display = "flex";
+      renameComponentsEditor.focus();
+      renameComponentsEditor.select();
+    }
+
+    function closeRenameComponentsModal() {
+      renameComponentsModal.style.display = "none";
+    }
+
+    function applyRenameComponentsModal() {
+      const newIds = renameComponentsEditor.value
+        .split(/\r?\n/)
+        .map(x => x.trim())
+        .filter(Boolean);
+
+      const currentIds = boardData.components.map(comp => comp.id);
+
+      if (newIds.length !== currentIds.length) {
+        alert(`Expected ${currentIds.length} component IDs (one per line), but got ${newIds.length}.`);
+        return;
+      }
+
+      const uniqueCheck = new Set(newIds);
+      if (uniqueCheck.size !== newIds.length) {
+        alert("Component IDs must be unique.");
+        return;
+      }
+
+      const idMap = {};
+      for (let i = 0; i < currentIds.length; i++) {
+        idMap[currentIds[i]] = newIds[i];
+      }
+
+      boardData.components.forEach((comp, idx) => {
+        comp.id = newIds[idx];
+      });
+
+      const newPins = {};
+      currentIds.forEach(oldId => {
+        const mappedId = idMap[oldId];
+        newPins[mappedId] = boardData.pins[oldId] || {};
+      });
+      boardData.pins = newPins;
+
+      if (selectedComponentId && idMap[selectedComponentId]) {
+        selectedComponentId = idMap[selectedComponentId];
+      }
+
+      if (lastInteraction?.type === "component" && idMap[lastInteraction.id]) {
+        lastInteraction = { ...lastInteraction, id: idMap[lastInteraction.id] };
+      }
+
+      if (selectedSet.components.size > 0) {
+        const remappedSelection = new Set();
+        selectedSet.components.forEach(id => {
+          if (idMap[id]) remappedSelection.add(idMap[id]);
+        });
+        selectedSet.components = remappedSelection;
+      }
+
+      closeRenameComponentsModal();
+      updatePropertiesPanel();
+      render();
+    }
+
     function openClearModal() {
       clearModal.style.display = "flex";
     }
@@ -1057,6 +1198,7 @@
       boardData.components = [];
       boardData.pins = {};
       boardData.cuts = [];
+      boardData.drillCuts = [];
       boardData.jumpers = [];
       selectedComponentId = null;
       dragging = null;
@@ -1371,6 +1513,12 @@
       }
     });
 
+    renameComponentsModal.addEventListener("click", (e) => {
+      if (e.target === renameComponentsModal) {
+        closeRenameComponentsModal();
+      }
+    });
+
     clearModal.addEventListener("click", (e) => {
       if (e.target === clearModal) {
         closeClearModal();
@@ -1401,13 +1549,25 @@
           return;
         }
 
+        if (renameComponentsModal.style.display === "flex") {
+          closeRenameComponentsModal();
+          return;
+        }
+
         if (pinModal.style.display === "flex") {
           closePinEditor();
           return;
         }
+
+        if (creatingJumper) {
+          creatingJumper = null;
+          creatingJumperTo = null;
+          render();
+          return;
+        }
       }
 
-      if (dataModal.style.display === "flex" || componentModal.style.display === "flex" || pinModal.style.display === "flex") {
+      if (dataModal.style.display === "flex" || componentModal.style.display === "flex" || renameComponentsModal.style.display === "flex" || pinModal.style.display === "flex") {
         return;
       }
       const active = document.activeElement;
@@ -1421,10 +1581,15 @@
 
       if (isTyping) return;
 
-      if ((e.key === "Delete" || e.key === "Backspace") && hasMultiSelection()) {
-        e.preventDefault();
-        deleteSelection();
-        return;
+      if (e.key === "Delete" || e.key === "Backspace") {
+        const handled = hasMultiSelection()
+          ? deleteSelection()
+          : deleteSingleSelectionOrLastInteraction();
+
+        if (handled) {
+          e.preventDefault();
+          return;
+        }
       }
 
       if ((e.key === "r" || e.key === "R") && selectedComponentId) {
@@ -1455,15 +1620,19 @@
     function neighbors(r, c) {
       const n = [];
 
+      if (hasDrillCut(r, c)) {
+        return n;
+      }
+
       // horizontal (strip unless cut)
-      if (c > 0 && !boardData.cuts.some(x => x.row === r && x.col === c - 1)) n.push([r, c - 1]);
-      if (c < cols - 1 && !boardData.cuts.some(x => x.row === r && x.col === c)) n.push([r, c + 1]);
+      if (c > 0 && !hasSegmentCut(r, c - 1) && !hasDrillCut(r, c - 1)) n.push([r, c - 1]);
+      if (c < cols - 1 && !hasSegmentCut(r, c) && !hasDrillCut(r, c + 1)) n.push([r, c + 1]);
 
       // jumpers
       boardData.jumpers.forEach(j => {
-        if (j.from.row === r && j.from.col === c)
+        if (j.from.row === r && j.from.col === c && !hasDrillCut(j.to.row, j.to.col))
           n.push([j.to.row, j.to.col]);
-        if (j.to.row === r && j.to.col === c)
+        if (j.to.row === r && j.to.col === c && !hasDrillCut(j.from.row, j.from.col))
           n.push([j.from.row, j.from.col]);
       });
 
@@ -1476,13 +1645,19 @@
 
       Object.values(boardData.pins).forEach(compPins => {
         Object.values(compPins).forEach(p => {
-          set.add(key(p.row, p.col));
+          if (!hasDrillCut(p.row, p.col)) {
+            set.add(key(p.row, p.col));
+          }
         });
       });
 
       boardData.jumpers.forEach(j => {
-        set.add(key(j.from.row, j.from.col));
-        set.add(key(j.to.row, j.to.col));
+        if (!hasDrillCut(j.from.row, j.from.col)) {
+          set.add(key(j.from.row, j.from.col));
+        }
+        if (!hasDrillCut(j.to.row, j.to.col)) {
+          set.add(key(j.to.row, j.to.col));
+        }
       });
 
       return set;
@@ -1530,7 +1705,12 @@
           let runStart = 0;
 
           for (let cc = 0; cc < cols; cc++) {
-            const atRunEnd = cc === cols - 1 || boardData.cuts.some(cut => cut.row === rr && cut.col === cc);
+            const nextCol = cc + 1;
+            const atRunEnd =
+              cc === cols - 1 ||
+              hasSegmentCut(rr, cc) ||
+              hasDrillCut(rr, cc) ||
+              (nextCol < cols && hasDrillCut(rr, nextCol));
             if (!atRunEnd) continue;
 
             const runEnd = cc;
@@ -1610,9 +1790,11 @@
       for (let r = 0; r < rows; r++) {
         for (let c = 0; c < cols - 1; c++) {
 
-          const hasCut = boardData.cuts.some(cut => cut.row === r && cut.col === c);
+          const hasCut = hasSegmentCut(r, c);
+          const leftHoleDrilled = hasDrillCut(r, c);
+          const rightHoleDrilled = hasDrillCut(r, c + 1);
 
-          if (!hasCut) {
+          if (!hasCut && !leftHoleDrilled && !rightHoleDrilled) {
             const p1 = pos(r, c);
             const p2 = pos(r, c + 1);
 
@@ -1727,6 +1909,46 @@
 
         svg.appendChild(line);
       });
+
+      (boardData.drillCuts || []).forEach((drill, index) => {
+        const p = pos(drill.row, drill.col);
+
+        const hit = create("circle", {
+          cx: p.x,
+          cy: p.y,
+          r: 10,
+          fill: "transparent"
+        });
+        hit.dataset.drillCutIndex = index;
+        hit.style.cursor = "pointer";
+        svg.appendChild(hit);
+
+        svg.appendChild(create("circle", {
+          cx: p.x,
+          cy: p.y,
+          r: 7,
+          class: "drill-cut",
+          "pointer-events": "none"
+        }));
+
+        svg.appendChild(create("line", {
+          x1: p.x - 4,
+          y1: p.y - 4,
+          x2: p.x + 4,
+          y2: p.y + 4,
+          class: "drill-cut",
+          "pointer-events": "none"
+        }));
+
+        svg.appendChild(create("line", {
+          x1: p.x - 4,
+          y1: p.y + 4,
+          x2: p.x + 4,
+          y2: p.y - 4,
+          class: "drill-cut",
+          "pointer-events": "none"
+        }));
+      });
     }
 
 
@@ -1782,6 +2004,44 @@
 
         svg.appendChild(h2);
       });
+
+      if (creatingJumper?.from) {
+        const to = creatingJumperTo || creatingJumper.from;
+        const p1 = pos(creatingJumper.from.row, creatingJumper.from.col);
+        const p2 = pos(to.row, to.col);
+
+        const preview = create("line", {
+          x1: p1.x,
+          y1: p1.y,
+          x2: p2.x,
+          y2: p2.y,
+          class: "jumper",
+          "stroke-dasharray": "6 4",
+          opacity: "0.7",
+          "pointer-events": "none"
+        });
+        svg.appendChild(preview);
+
+        svg.appendChild(create("circle", {
+          cx: p1.x,
+          cy: p1.y,
+          r: 5,
+          fill: "white",
+          stroke: "green",
+          "stroke-width": 2,
+          "pointer-events": "none"
+        }));
+
+        svg.appendChild(create("circle", {
+          cx: p2.x,
+          cy: p2.y,
+          r: 5,
+          fill: "white",
+          stroke: "green",
+          "stroke-width": 2,
+          "pointer-events": "none"
+        }));
+      }
 
     }
 
@@ -2224,8 +2484,8 @@
       const newRows = parseInt(document.getElementById('topBoardRows').value) || rows;
       const newCols = parseInt(document.getElementById('topBoardCols').value) || cols;
 
-      if (newRows < 5 || newRows > 50 || newCols < 5 || newCols > 50) {
-        alert('Board dimensions must be between 5 and 50.');
+      if (newRows < 5 || newRows > MAXROWS || newCols < 5 || newCols > MAXCOLS) {
+        alert(`Board dimensions must be between 5 and ${MAXROWS} rows and 5 and ${MAXCOLS} columns.`);
         return;
       }
 
@@ -2397,11 +2657,23 @@
           "stroke-width": 1.5, "pointer-events": "none"
         }));
       });
+
+      selectedSet.drillCuts.forEach(i => {
+        const c = (boardData.drillCuts || [])[i];
+        if (!c) return;
+        const pt = pos(c.row, c.col);
+        svg.appendChild(create("circle", {
+          cx: pt.x, cy: pt.y, r: 9,
+          fill: "rgba(0,120,212,0.18)", stroke: "#0078d4",
+          "stroke-width": 1.5, "pointer-events": "none"
+        }));
+      });
     }
 
     function moveSelection(dRow, dCol) {
       let minR = Infinity, maxR = -Infinity, minC = Infinity, maxC = -Infinity;
-      let maxCutC = -Infinity, hasCut = false;
+      let maxCutC = -Infinity, hasSegmentCutInSelection = false;
+      let maxDrillCutC = -Infinity, hasDrillCutInSelection = false;
 
       selectedSet.components.forEach(id => {
         const pm = boardData.pins[id];
@@ -2422,17 +2694,26 @@
       selectedSet.cuts.forEach(i => {
         const c = boardData.cuts[i];
         if (!c) return;
-        hasCut = true;
+        hasSegmentCutInSelection = true;
         minR = Math.min(minR, c.row); maxR = Math.max(maxR, c.row);
         minC = Math.min(minC, c.col); maxC = Math.max(maxC, c.col);
         maxCutC = Math.max(maxCutC, c.col);
+      });
+      selectedSet.drillCuts.forEach(i => {
+        const c = (boardData.drillCuts || [])[i];
+        if (!c) return;
+        hasDrillCutInSelection = true;
+        minR = Math.min(minR, c.row); maxR = Math.max(maxR, c.row);
+        minC = Math.min(minC, c.col); maxC = Math.max(maxC, c.col);
+        maxDrillCutC = Math.max(maxDrillCutC, c.col);
       });
 
       if (minR === Infinity) return { dRow: 0, dCol: 0 };
 
       dRow = Math.max(-minR, Math.min((rows - 1) - maxR, dRow));
       let upperCol = (cols - 1) - maxC;
-      if (hasCut) upperCol = Math.min(upperCol, (cols - 2) - maxCutC);
+      if (hasSegmentCutInSelection) upperCol = Math.min(upperCol, (cols - 2) - maxCutC);
+      if (hasDrillCutInSelection) upperCol = Math.min(upperCol, (cols - 1) - maxDrillCutC);
       dCol = Math.max(-minC, Math.min(upperCol, dCol));
 
       if (!dRow && !dCol) return { dRow: 0, dCol: 0 };
@@ -2454,6 +2735,11 @@
         const c = boardData.cuts[i];
         if (!c) return;
         boardData.cuts[i] = { row: c.row + dRow, col: c.col + dCol };
+      });
+      selectedSet.drillCuts.forEach(i => {
+        const c = (boardData.drillCuts || [])[i];
+        if (!c) return;
+        boardData.drillCuts[i] = { row: c.row + dRow, col: c.col + dCol };
       });
 
       return { dRow, dCol };
@@ -2496,6 +2782,11 @@
         const pt = pos(c.row, c.col);
         if (inside(pt.x + 13, pt.y)) selectedSet.cuts.add(i);
       });
+
+      (boardData.drillCuts || []).forEach((c, i) => {
+        const pt = pos(c.row, c.col);
+        if (inside(pt.x, pt.y)) selectedSet.drillCuts.add(i);
+      });
     }
 
     function deleteSelection() {
@@ -2510,8 +2801,65 @@
       });
       Array.from(selectedSet.jumpers).sort((a, b) => b - a).forEach(i => boardData.jumpers.splice(i, 1));
       Array.from(selectedSet.cuts).sort((a, b) => b - a).forEach(i => boardData.cuts.splice(i, 1));
+      Array.from(selectedSet.drillCuts).sort((a, b) => b - a).forEach(i => (boardData.drillCuts || []).splice(i, 1));
+      lastInteraction = null;
       clearSelection();
       render();
+      return true;
+    }
+
+    function deleteSingleSelectionOrLastInteraction() {
+      if (selectedComponentId) {
+        const idx = boardData.components.findIndex(c => c.id === selectedComponentId);
+        if (idx >= 0) {
+          boardData.components.splice(idx, 1);
+          delete boardData.pins[selectedComponentId];
+        }
+        selectedComponentId = null;
+        lastInteraction = null;
+        clearSelection();
+        updatePropertiesPanel();
+        render();
+        return true;
+      }
+
+      if (!lastInteraction) return false;
+
+      if (lastInteraction.type === "jumper") {
+        const idx = Number(lastInteraction.id);
+        if (Number.isInteger(idx) && idx >= 0 && idx < boardData.jumpers.length) {
+          boardData.jumpers.splice(idx, 1);
+          lastInteraction = null;
+          clearSelection();
+          render();
+          return true;
+        }
+      }
+
+      if (lastInteraction.type === "cut") {
+        const idx = Number(lastInteraction.id);
+        if (Number.isInteger(idx) && idx >= 0 && idx < boardData.cuts.length) {
+          boardData.cuts.splice(idx, 1);
+          lastInteraction = null;
+          clearSelection();
+          render();
+          return true;
+        }
+      }
+
+      if (lastInteraction.type === "drillCut") {
+        const idx = Number(lastInteraction.id);
+        const drills = boardData.drillCuts || [];
+        if (Number.isInteger(idx) && idx >= 0 && idx < drills.length) {
+          drills.splice(idx, 1);
+          lastInteraction = null;
+          clearSelection();
+          render();
+          return true;
+        }
+      }
+
+      return false;
     }
 
 
@@ -2532,14 +2880,17 @@
       const compId = e.target.dataset.compId;
       const jumperIndex = e.target.dataset.jumperIndex;
       const cutIndex = e.target.dataset.cutIndex;
+      const drillCutIndex = e.target.dataset.drillCutIndex;
       const end = e.target.dataset.end;
+      const isJumperEnd = end === "from" || end === "to";
 
       // Group drag: clicking a member of an existing multi-selection (no modifiers)
       if (!e.shiftKey && !e.ctrlKey && hasMultiSelection()) {
         const clickedSelected =
           (compId && selectedSet.components.has(compId)) ||
-          (jumperIndex !== undefined && selectedSet.jumpers.has(Number(jumperIndex))) ||
-          (cutIndex !== undefined && selectedSet.cuts.has(Number(cutIndex)));
+          (jumperIndex !== undefined && isJumperEnd && selectedSet.jumpers.has(Number(jumperIndex))) ||
+          (cutIndex !== undefined && selectedSet.cuts.has(Number(cutIndex))) ||
+          (drillCutIndex !== undefined && selectedSet.drillCuts.has(Number(drillCutIndex)));
         if (clickedSelected) {
           const m = snap(ux(e), uy(e));
           groupDrag = { lastRow: m.row, lastCol: m.col };
@@ -2566,6 +2917,9 @@
         };
       }
       else if (jumperIndex !== undefined) {
+        if (!isJumperEnd) {
+          return;
+        }
         if (hasMultiSelection()) { clearSelection(); render(); }
         lastInteraction = { type: "jumper", id: Number(jumperIndex) };
         dragging = {
@@ -2610,6 +2964,39 @@
         
         dragging = { type: "cut", index: cutIdx, indicesToMove };
       }
+      else if (drillCutIndex !== undefined) {
+        if (hasMultiSelection()) { clearSelection(); render(); }
+        lastInteraction = { type: "drillCut", id: Number(drillCutIndex) };
+        const cutIdx = Number(drillCutIndex);
+
+        let indicesToMove = [cutIdx];
+        if (e.altKey) {
+          const drillCuts = boardData.drillCuts || [];
+          const visited = new Set();
+          const queue = [cutIdx];
+          visited.add(cutIdx);
+
+          while (queue.length > 0) {
+            const idx = queue.shift();
+            const cut = drillCuts[idx];
+            if (!cut) continue;
+
+            drillCuts.forEach((other, otherIdx) => {
+              if (!other || visited.has(otherIdx)) return;
+              const dRow = Math.abs(other.row - cut.row);
+              const dCol = Math.abs(other.col - cut.col);
+              if ((dRow === 0 && dCol === 1) || (dCol === 0 && dRow === 1)) {
+                visited.add(otherIdx);
+                queue.push(otherIdx);
+              }
+            });
+          }
+
+          indicesToMove = Array.from(visited);
+        }
+
+        dragging = { type: "drillCut", index: cutIdx, indicesToMove };
+      }
       else {
         // Empty board area: start a lasso selection (no modifiers held)
         if (!e.shiftKey && !e.ctrlKey) {
@@ -2622,10 +3009,20 @@
     });
 
     svg.addEventListener("mousemove", (e) => {
-      if (!dragging) return;
-
       const snapped = snap(ux(e), uy(e));
       const snappedCut = snapCut(ux(e), uy(e));
+
+      if (creatingJumper) {
+        const next = { row: snapped.row, col: snapped.col };
+        if (!creatingJumperTo || creatingJumperTo.row !== next.row || creatingJumperTo.col !== next.col) {
+          creatingJumperTo = next;
+          if (!dragging) {
+            render();
+          }
+        }
+      }
+
+      if (!dragging) return;
 
       // ---------------- LASSO ----------------
       if (dragging.type === "lasso") {
@@ -2697,6 +3094,28 @@
         });
       }
 
+      if (dragging.type === "drillCut") {
+        const drillCuts = boardData.drillCuts || [];
+        const originalCut = drillCuts[dragging.index];
+        if (!originalCut) {
+          render();
+          return;
+        }
+
+        const dRow = snapped.row - originalCut.row;
+        const dCol = snapped.col - originalCut.col;
+
+        const indicesToMove = dragging.indicesToMove || [dragging.index];
+        indicesToMove.forEach(idx => {
+          const cut = drillCuts[idx];
+          if (!cut) return;
+          drillCuts[idx] = {
+            row: Math.max(0, Math.min(rows - 1, cut.row + dRow)),
+            col: Math.max(0, Math.min(cols - 1, cut.col + dCol))
+          };
+        });
+      }
+
       render();
     });
 
@@ -2708,7 +3127,7 @@
       const snapped = snap(ux(e), uy(e));
       const snappedCut = snapCut(ux(e), uy(e));
 
-      // Ctrl+click: toggle a cut at this hole
+      // Ctrl+click: toggle either a segment cut or a drilled-hole cut
       if (e.ctrlKey) {
         const compId = e.target.dataset.compId;
         if (compId) {
@@ -2727,9 +3146,33 @@
         }
 
         const jumperIndex = e.target.dataset.jumperIndex;
-        if (jumperIndex !== undefined) {
+        const end = e.target.dataset.end;
+        const isJumperEnd = end === "from" || end === "to";
+        if (jumperIndex !== undefined && isJumperEnd) {
           boardData.jumpers.splice(Number(jumperIndex), 1);
           creatingJumper = null;
+          clearSelection();
+          render();
+          return;
+        }
+
+        const drillCutMode = document.getElementById("drillCutMode")?.checked ?? false;
+
+        if (drillCutMode) {
+          if (!Array.isArray(boardData.drillCuts)) {
+            boardData.drillCuts = [];
+          }
+
+          const drillIndex = boardData.drillCuts.findIndex(cut =>
+            cut.row === snapped.row && cut.col === snapped.col
+          );
+
+          if (drillIndex >= 0) {
+            boardData.drillCuts.splice(drillIndex, 1);
+          } else {
+            boardData.drillCuts.push({ row: snapped.row, col: snapped.col });
+          }
+
           clearSelection();
           render();
           return;
@@ -2756,6 +3199,8 @@
       // first click â†’ start
       if (!creatingJumper) {
         creatingJumper = { from: snapped };
+        creatingJumperTo = { row: snapped.row, col: snapped.col };
+        render();
         return;
       }
 
@@ -2766,6 +3211,7 @@
       });
 
       creatingJumper = null;
+      creatingJumperTo = null;
       render();
     });
 
